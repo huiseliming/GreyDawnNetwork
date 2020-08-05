@@ -3,6 +3,12 @@ cmake_minimum_required(VERSION 3.12)
 set(This GreyDawnNetWork)
 project(${This})
 message(STATUS "compiler: " ${CMAKE_CXX_COMPILER_ID})
+find_package(spdlog CONFIG REQUIRED)
+find_package(jsoncpp CONFIG REQUIRED)
+find_package(OpenSSL REQUIRED)
+find_package(GTest CONFIG REQUIRED)
+enable_testing()
+
 
 
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
@@ -44,9 +50,30 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set (CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) 
 set (CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin) 
 
-find_package(OpenSSL REQUIRED)
-
+#build ThirdParty
 add_subdirectory(ThirdParty)
+
+#build library
+FILE(GLOB_RECURSE SourceFiles  
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
+    )
+
+add_library(${This} STATIC
+    ${SourceFiles} 
+     "src/utility/Logger.cpp")
+
+target_include_directories(${This} PUBLIC include)
+target_include_directories(${This} PRIVATE src)
+
+set(DependentLibraries ${DependentLibraries} jsoncpp_lib)
+set(DependentLibraries ${DependentLibraries} asio)
+set(DependentLibraries ${DependentLibraries} spdlog::spdlog_header_only)
+target_link_libraries(${This} PRIVATE ${DependentLibraries})
+
+#build tests
+add_subdirectory(tests)
 
 
 

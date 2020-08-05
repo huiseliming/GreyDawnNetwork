@@ -5,8 +5,6 @@ project(${This})
 
 
 add_subdirectory(asio)
-add_subdirectory(GreyDawnGlobal)
-
 
 
 

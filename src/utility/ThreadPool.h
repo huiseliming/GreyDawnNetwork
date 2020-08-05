@@ -30,159 +30,160 @@
 #include<iostream>
 #include<atomic>
 
-class ThreadPool
+namespace GreyDawn
 {
-public:
-    explicit ThreadPool(std::string name)
+    class ThreadPool
     {
-        m_Name = name;
-        std::cout << "threadpool [" << m_Name << "] create" << std::endl; 
-        Start();
-    }
-
-    explicit ThreadPool(uint32_t NumThread)
-    {
-        Start(NumThread);
-    }
-
-    ~ThreadPool()
-    {
-        Stop();
-        std::cout << "threadpool [" << m_Name << "] destory" << std::endl;
-    }
-
-    template<typename Task, typename ...Args>
-    void AsyncExecuteTask(Task&& task, Args&& ...args)
-    {
-        std::shared_ptr<std::function<void()>> executeTask =
-            std::make_shared<std::function<void()>>(
-                [task = std::move(task), args = std::make_tuple(std::forward<Args>(args)...)]() mutable
-                {
-                    return std::apply(std::move(task), std::move(args));
-                }
-        );
-
+    public:
+        explicit ThreadPool(std::string name)
         {
-            std::unique_lock<std::mutex> UniqueLock(m_Mutex);
-            m_Tasks.emplace([=] {
-                (*executeTask)();
-            });
+            name_ = name;
+            Start();
         }
-        m_ConditionVariable.notify_one();
-    }
 
-    template<typename Task>
-    void AsyncExecuteTask(Task&& task)
-    {
-        std::shared_ptr<std::function<void()>> executeTask = std::make_shared<std::function<void()>>(std::forward<Task>(task));
+        explicit ThreadPool(uint32_t num_thread)
         {
-            std::unique_lock<std::mutex> UniqueLock(m_Mutex);
-            m_Tasks.emplace([=] {
-                (*executeTask)();
-            });
+            Start(num_thread);
         }
-        m_ConditionVariable.notify_one();
-    }
 
-    template<typename Task, typename ...Args>
-    auto AsyncPackagedTask(Task&& task, Args&& ...args)
-    {
-
-        std::shared_ptr< std::packaged_task<std::invoke_result_t<Task, Args...>()> > packagedTask =
-            std::make_shared< std::packaged_task<std::invoke_result_t<Task, Args...>()> >(
-                [task = std::move(task), args = std::make_tuple(std::forward<Args>(args)...)]() mutable
-                {
-                    return std::apply(std::move(task), std::move(args));
-                }
-        );
-
+        ~ThreadPool()
         {
-            std::unique_lock<std::mutex> UniqueLock(m_Mutex);
-            m_Tasks.emplace([=] {
-                (*packagedTask)();
-            });
+            Stop();
         }
-        m_ConditionVariable.notify_one();
-        return packagedTask->get_future();
-    }
 
-    template<typename Task>
-    auto AsyncPackagedTask(Task&& task)->std::future<decltype(std::forward<Task>(task)())>
-    {
-        std::shared_ptr< std::packaged_task<decltype(std::forward<Task>(task)())()> > packagedTask =
-            std::make_shared< std::packaged_task<decltype(std::forward<Task>(task)())()> >(task);
+        template<typename Task, typename ...Args>
+        void AsyncExecuteTask(Task&& task, Args&& ...args)
         {
-            std::unique_lock<std::mutex> UniqueLock(m_Mutex);
-            m_Tasks.emplace([=] {
-                (*packagedTask)();
-            });
-        }
-        m_ConditionVariable.notify_one();
-        return packagedTask->get_future();
-    }
-
-    void WaitTaskEmpty()
-    {
-        while (!TaskEmpty())
-            std::this_thread::yield();
-    }
-
-    bool TaskEmpty()
-    {
-        return m_Tasks.size() == 0;
-    }
-
-    int IdleNumber()
-    {
-        return m_ThreadCount - m_CurrentWorking;
-    }
-
-private:
-    std::string m_Name;
-    int m_ThreadCount = 0;
-    std::atomic_int32_t m_CurrentWorking;
-    bool m_Stop = false;
-    std::mutex m_Mutex;
-    std::vector<std::thread> m_Threads;
-    std::queue<std::function<void()>> m_Tasks;
-    std::condition_variable m_ConditionVariable;
-
-    void Start(uint32_t NumThread = 0)
-    {
-        uint32_t m_ThreadCount = NumThread ? NumThread : (std::thread::hardware_concurrency() * 2);
-        m_CurrentWorking = m_ThreadCount;
-        for (size_t i = 0; i < m_ThreadCount; i++)
-        {
-            m_Threads.emplace_back([=,id = i] {
-                std::function<void()> task;
-                while (true)
-                {
+            std::shared_ptr<std::function<void()>> executeTask =
+                std::make_shared<std::function<void()>>(
+                    [task = std::move(task), args = std::make_tuple(std::forward<Args>(args)...)]() mutable
                     {
-                        std::unique_lock<std::mutex> lock(this->m_Mutex);
-                        m_CurrentWorking--;
-                        m_ConditionVariable.wait(lock, [=] {return this->m_Stop || !m_Tasks.empty(); });
-                        m_CurrentWorking++;
-                        if (this->m_Stop && m_Tasks.empty())
-                            break;
-                        task = std::move(this->m_Tasks.front());
-                        this->m_Tasks.pop();
+                        return std::apply(std::move(task), std::move(args));
                     }
-                    task();
-                }
-            });
-        }
-    }
+            );
 
-    void Stop()noexcept
-    {
-        {
-            std::unique_lock<std::mutex> lock{ m_Mutex };
-            m_Stop = true;
+            {
+                std::unique_lock<std::mutex> UniqueLock(mutex_);
+                tasks_.emplace([=] {
+                    (*executeTask)();
+                });
+            }
+            condition_variable_.notify_one();
         }
-        m_ConditionVariable.notify_all();
-        for (auto& thread : m_Threads)
+
+        template<typename Task>
+        void AsyncExecuteTask(Task&& task)
         {
-            thread.join();
+            std::shared_ptr<std::function<void()>> executeTask = std::make_shared<std::function<void()>>(std::forward<Task>(task));
+            {
+                std::unique_lock<std::mutex> UniqueLock(mutex_);
+                tasks_.emplace([=] {
+                    (*executeTask)();
+                });
+            }
+            condition_variable_.notify_one();
         }
-    }
-};
+
+        template<typename Task, typename ...Args>
+        auto AsyncPackagedTask(Task&& task, Args&& ...args)
+        {
+
+            std::shared_ptr< std::packaged_task<std::invoke_result_t<Task, Args...>()> > packaged_task =
+                std::make_shared< std::packaged_task<std::invoke_result_t<Task, Args...>()> >(
+                    [task = std::move(task), args = std::make_tuple(std::forward<Args>(args)...)]() mutable
+                    {
+                        return std::apply(std::move(task), std::move(args));
+                    }
+            );
+
+            {
+                std::unique_lock<std::mutex> UniqueLock(mutex_);
+                tasks_.emplace([=] {
+                    (*packaged_task)();
+                });
+            }
+            condition_variable_.notify_one();
+            return packaged_task->get_future();
+        }
+
+        template<typename Task>
+        auto AsyncPackagedTask(Task&& task)->std::future<decltype(std::forward<Task>(task)())>
+        {
+            std::shared_ptr< std::packaged_task<decltype(std::forward<Task>(task)())()> > packaged_task =
+                std::make_shared< std::packaged_task<decltype(std::forward<Task>(task)())()> >(task);
+            {
+                std::unique_lock<std::mutex> UniqueLock(mutex_);
+                tasks_.emplace([=] {
+                    (*packaged_task)();
+                });
+            }
+            condition_variable_.notify_one();
+            return packaged_task->get_future();
+        }
+
+        void WaitTaskEmpty()
+        {
+            while (!TaskEmpty())
+                std::this_thread::yield();
+        }
+
+        bool TaskEmpty()
+        {
+            return tasks_.size() == 0;
+        }
+
+        int IdleNumber()
+        {
+            return thread_count_ - current_working_;
+        }
+
+    private:
+        std::string name_;
+        int thread_count_ = 0;
+        std::atomic_int32_t current_working_;
+        bool stop_ = false;
+        std::mutex mutex_;
+        std::vector<std::thread> threads_;
+        std::queue<std::function<void()>> tasks_;
+        std::condition_variable condition_variable_;
+
+        void Start(uint32_t NumThread = 0)
+        {
+            uint32_t thread_count_ = NumThread ? NumThread : (std::thread::hardware_concurrency() * 2);
+            current_working_ = thread_count_;
+            for (size_t i = 0; i < thread_count_; i++)
+            {
+                threads_.emplace_back([=,id = i] {
+                    std::function<void()> task;
+                    while (true)
+                    {
+                        {
+                            std::unique_lock<std::mutex> lock(this->mutex_);
+                            current_working_--;
+                            condition_variable_.wait(lock, [=] {return this->stop_ || !tasks_.empty(); });
+                            current_working_++;
+                            if (this->stop_ && tasks_.empty())
+                                break;
+                            task = std::move(this->tasks_.front());
+                            this->tasks_.pop();
+                        }
+                        task();
+                    }
+                });
+            }
+        }
+
+        void Stop()noexcept
+        {
+            {
+                std::unique_lock<std::mutex> lock{ mutex_ };
+                stop_ = true;
+            }
+            condition_variable_.notify_all();
+            for (auto& thread : threads_)
+            {
+                thread.join();
+            }
+        }
+    };
+}
