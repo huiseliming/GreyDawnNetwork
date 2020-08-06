@@ -26,26 +26,19 @@ TEST(tests, ThreadPoolTest)
 	ASSERT_EQ(*count_sum, task_number * 1024);
 	ASSERT_TRUE("Pass");
 }
-
-
-
-//template<typename T>
-//std::optional<T> GetJsonField(Json::Value& json_value, std::string_view field)
-//{
-//	std::optional<T> opt;
-//	if (!json_value[field.data()].is<T>())
-//		opt = json_value[field.data()].as<T>();
-//	return opt;
-//}
-
+#include <skyr/url.hpp>
 TEST(tests, ParseJsonTest)
 {
 	std::string json_string = "{\"test\":\"pass\"}";
 	Json::Value json_value;
-	ASSERT_TRUE(ParseJsonStringToJsonValue(json_string, json_value));
+	ASSERT_TRUE(parseJsonStringToJsonValue(json_string, json_value));
 	ASSERT_EQ(json_value["test"].asString(), "pass");
-	auto opt = GetJsonField<std::string>(json_value, "test");
+	auto opt = getJsonField<std::string>(json_value, "test");
 	ASSERT_TRUE(opt.has_value());
 	ASSERT_EQ(opt.value(), "pass");
+	auto url = skyr::url("http://example.org/");
+	//std::cout << url << std::endl;
+	//std::cout << url.pathname() << std::endl;
+
 }
 

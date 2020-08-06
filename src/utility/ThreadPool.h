@@ -29,7 +29,7 @@
 #include<future>
 #include<iostream>
 #include<atomic>
-#include "Logger.h"
+
 namespace GreyDawn
 {
     class ThreadPool
