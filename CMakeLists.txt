@@ -62,7 +62,7 @@ FILE(GLOB_RECURSE SourceFiles
 
 add_library(${This} STATIC
     ${SourceFiles} 
-     "src/utility/Logger.cpp")
+    )
 
 target_include_directories(${This} PUBLIC include)
 target_include_directories(${This} PRIVATE src)

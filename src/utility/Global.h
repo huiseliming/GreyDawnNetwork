@@ -25,15 +25,14 @@
 #include <cassert>
 #include <vector>
 #include <functional>
+#include <mutex>
 
 
 namespace GreyDawn
 {
     namespace Global
     {
-        /*
-         *
-         */
+
         std::vector<std::function<void()>>& GetConstructorVector();
         std::vector<std::function<void()>>& GetDestructorVector();
 

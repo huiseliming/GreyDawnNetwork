@@ -1,8 +1,6 @@
 #include "Utility.h"
 #include <fstream>
-#include <optional>
 
-using namespace GreyDawn;
 namespace GreyDawn
 {
 	bool ParseJsonStringToJsonValue(std::string json_string, Json::Value& json_value)
@@ -18,25 +16,6 @@ namespace GreyDawn
 		}
 		return true;
 	}
-	template<typename T>
-	std::optional<T> GetJsonArrayField(Json::Value& json_value, std::string_view field)
-	{
-		std::optional<T> opt;
-		if (!json_value[field.data()].is<T>())
-		T = json_value[field.data()];
-		return opt;
-	}
-
-
-	std::optional<std::string> GetJsonStringField(Json::Value& json_value, std::string_view field)
-	{
-		std::optional<std::string> opt;
-		if (!json_value[field.data()].isString())
-			opt = json_value[field.data()].asString();
-		return opt;
-	}
-
-
 
 	bool GreyDawn::ReadJsonFile(std::string file_path, Json::Value& json_value)
 	{
