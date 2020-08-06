@@ -3,7 +3,7 @@
 
 namespace GreyDawn
 {
-	bool ParseJsonStringToJsonValue(std::string json_string, Json::Value& json_value)
+	bool parseJsonStringToJsonValue(std::string json_string, Json::Value& json_value)
 	{
 		thread_local JSONCPP_STRING jsoncpp_error;
 		thread_local Json::CharReaderBuilder builder; 
@@ -17,7 +17,7 @@ namespace GreyDawn
 		return true;
 	}
 
-	bool ReadJsonFile(std::string file_path, Json::Value& json_value)
+	bool readJsonFile(std::string file_path, Json::Value& json_value)
 	{
 		std::ifstream ifs;
 		ifs.open(file_path);
@@ -35,7 +35,7 @@ namespace GreyDawn
 		return true;
 	}
 
-	bool WriteJsonFile(std::string file_path, Json::Value& json_value)
+	bool writeJsonFile(std::string file_path, Json::Value& json_value)
 	{
 		std::ofstream ofs;
 		ofs.open(file_path, std::ios::ate | std::ios::out);
