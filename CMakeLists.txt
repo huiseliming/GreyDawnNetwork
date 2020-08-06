@@ -62,7 +62,7 @@ FILE(GLOB_RECURSE SourceFiles
 
 add_library(${This} STATIC
     ${SourceFiles} 
-    )
+     )
 
 target_include_directories(${This} PUBLIC include)
 target_include_directories(${This} PRIVATE src)

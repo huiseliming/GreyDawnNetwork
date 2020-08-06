@@ -10,12 +10,6 @@ namespace GreyDawn
 {
     std::shared_ptr<spdlog::logger> default_logger()
     {
-        class Shutdown
-        {
-        public:
-            ~Shutdown(){ spdlog::shutdown(); }
-        };
-        static Shutdown shutdown;
         static std::shared_ptr<spdlog::logger> default_Logger;
         spdlog::init_thread_pool(8192, 1);
         std::vector<spdlog::sink_ptr> sinks;

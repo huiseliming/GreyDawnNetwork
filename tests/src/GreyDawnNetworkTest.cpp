@@ -4,24 +4,24 @@ using namespace GreyDawn;
 
 TEST(tests, ThreadPoolTest)
 {
-	std::shared_ptr<int> count_sum;
-	size_t task_number = 0;
+	std::shared_ptr<int> count_sum = std::make_shared<int>(0);
+	size_t task_number = 10;
+	std::shared_ptr<std::mutex> spMutex = std::make_shared<std::mutex>();
+	bool Set = false;
+	std::vector<std::future<void>> tasks;
+	for (size_t i = 0; i < task_number; i++)
 	{
-		ThreadPool tp("ThreadPool");
-		std::shared_ptr<int> sp_counter = std::make_shared<int>(0);
-		std::shared_ptr<std::mutex> spMutex = std::make_shared<std::mutex>();
-		bool Set = false;
-		for (size_t i = 0; i < task_number; i++)
-		{
-			tp.AsyncExecuteTask([&, sp_counter, spMutex] {
-				for (size_t i = 0; i < 1024; i++)
-				{
-					std::lock_guard<std::mutex> Lock(*spMutex);
-					(*sp_counter)++;
-				}
-			});
-		}
-		count_sum = sp_counter;
+		tasks.push_back(Singleton<ThreadPool>::instance().AsyncPackagedTask([&, count_sum, spMutex] {
+			for (size_t i = 0; i < 1024; i++)
+			{
+				std::lock_guard<std::mutex> Lock(*spMutex);
+				(*count_sum)++;
+			}
+		}));
+	}
+	for (size_t i = 0; i < tasks.size(); i++)
+	{
+		tasks[i].get();
 	}
 	ASSERT_EQ(*count_sum, task_number * 1024);
 	ASSERT_TRUE("Pass");

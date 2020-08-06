@@ -29,15 +29,14 @@
 #include<future>
 #include<iostream>
 #include<atomic>
-
+#include "Logger.h"
 namespace GreyDawn
 {
     class ThreadPool
     {
     public:
-        explicit ThreadPool(std::string name)
+        ThreadPool()
         {
-            name_ = name;
             Start();
         }
 
@@ -61,7 +60,6 @@ namespace GreyDawn
                         return std::apply(std::move(task), std::move(args));
                     }
             );
-
             {
                 std::unique_lock<std::mutex> UniqueLock(mutex_);
                 tasks_.emplace([=] {
@@ -138,7 +136,6 @@ namespace GreyDawn
         }
 
     private:
-        std::string name_;
         int thread_count_ = 0;
         std::atomic_int32_t current_working_;
         bool stop_ = false;
@@ -150,7 +147,7 @@ namespace GreyDawn
         void Start(uint32_t NumThread = 0)
         {
             uint32_t thread_count_ = NumThread ? NumThread : (std::thread::hardware_concurrency() * 2);
-            current_working_ = thread_count_;
+            current_working_ = 0;
             for (size_t i = 0; i < thread_count_; i++)
             {
                 threads_.emplace_back([=,id = i] {
@@ -159,9 +156,9 @@ namespace GreyDawn
                     {
                         {
                             std::unique_lock<std::mutex> lock(this->mutex_);
-                            current_working_--;
-                            condition_variable_.wait(lock, [=] {return this->stop_ || !tasks_.empty(); });
                             current_working_++;
+                            condition_variable_.wait(lock, [=] {return this->stop_ || !tasks_.empty(); });
+                            current_working_--;
                             if (this->stop_ && tasks_.empty())
                                 break;
                             task = std::move(this->tasks_.front());
