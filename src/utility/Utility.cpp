@@ -17,7 +17,7 @@ namespace GreyDawn
 		return true;
 	}
 
-	bool GreyDawn::ReadJsonFile(std::string file_path, Json::Value& json_value)
+	bool ReadJsonFile(std::string file_path, Json::Value& json_value)
 	{
 		std::ifstream ifs;
 		ifs.open(file_path);
@@ -35,7 +35,7 @@ namespace GreyDawn
 		return true;
 	}
 
-	bool GreyDawn::WriteJsonFile(std::string file_path, Json::Value& json_value)
+	bool WriteJsonFile(std::string file_path, Json::Value& json_value)
 	{
 		std::ofstream ofs;
 		ofs.open(file_path, std::ios::ate | std::ios::out);

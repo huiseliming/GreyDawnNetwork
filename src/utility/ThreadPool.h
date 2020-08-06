@@ -37,21 +37,21 @@ namespace GreyDawn
     public:
         ThreadPool()
         {
-            Start();
+            start();
         }
 
         explicit ThreadPool(uint32_t num_thread)
         {
-            Start(num_thread);
+            start(num_thread);
         }
 
         ~ThreadPool()
         {
-            Stop();
+            stop();
         }
 
         template<typename Task, typename ...Args>
-        void AsyncExecuteTask(Task&& task, Args&& ...args)
+        void executeTask(Task&& task, Args&& ...args)
         {
             std::shared_ptr<std::function<void()>> executeTask =
                 std::make_shared<std::function<void()>>(
@@ -70,7 +70,7 @@ namespace GreyDawn
         }
 
         template<typename Task>
-        void AsyncExecuteTask(Task&& task)
+        void executeTask(Task&& task)
         {
             std::shared_ptr<std::function<void()>> executeTask = std::make_shared<std::function<void()>>(std::forward<Task>(task));
             {
@@ -83,7 +83,7 @@ namespace GreyDawn
         }
 
         template<typename Task, typename ...Args>
-        auto AsyncPackagedTask(Task&& task, Args&& ...args)
+        auto packagedTask(Task&& task, Args&& ...args)
         {
 
             std::shared_ptr< std::packaged_task<std::invoke_result_t<Task, Args...>()> > packaged_task =
@@ -105,7 +105,7 @@ namespace GreyDawn
         }
 
         template<typename Task>
-        auto AsyncPackagedTask(Task&& task)->std::future<decltype(std::forward<Task>(task)())>
+        auto packagedTask(Task&& task)->std::future<decltype(std::forward<Task>(task)())>
         {
             std::shared_ptr< std::packaged_task<decltype(std::forward<Task>(task)())()> > packaged_task =
                 std::make_shared< std::packaged_task<decltype(std::forward<Task>(task)())()> >(task);
@@ -119,18 +119,18 @@ namespace GreyDawn
             return packaged_task->get_future();
         }
 
-        void WaitTaskEmpty()
+        void waitTaskEmpty()
         {
-            while (!TaskEmpty())
+            while (!taskEmpty())
                 std::this_thread::yield();
         }
 
-        bool TaskEmpty()
+        bool taskEmpty()
         {
             return tasks_.size() == 0;
         }
 
-        int IdleNumber()
+        int idleNumber()
         {
             return thread_count_ - current_working_;
         }
@@ -144,7 +144,7 @@ namespace GreyDawn
         std::queue<std::function<void()>> tasks_;
         std::condition_variable condition_variable_;
 
-        void Start(uint32_t NumThread = 0)
+        void start(uint32_t NumThread = 0)
         {
             uint32_t thread_count_ = NumThread ? NumThread : (std::thread::hardware_concurrency() * 2);
             current_working_ = 0;
@@ -170,7 +170,7 @@ namespace GreyDawn
             }
         }
 
-        void Stop()noexcept
+        void stop()noexcept
         {
             {
                 std::unique_lock<std::mutex> lock{ mutex_ };

@@ -44,25 +44,25 @@ namespace GreyDawn
 		const char* what() const noexcept override
 		{
 			std::ostringstream oss;
-			oss << "[ExceptionType]: " << GetType() << std::endl
+			oss << "[ExceptionType]: " << getType() << std::endl
 				<< "[  Description]: " << message_ << std::endl
-				<< "[       Origin]: " << GetOriginString() << std::endl;
+				<< "[       Origin]: " << getOriginString() << std::endl;
 			what_buffer_ = oss.str();
 			return what_buffer_.c_str();
 		}
-		virtual const char* GetType() const noexcept
+		virtual const char* getType() const noexcept
 		{
 			return "Exception";
 		}
-		int GetLine() const noexcept
+		int getLine() const noexcept
 		{
 			return line_;
 		}
-		const std::string& GetFile() const noexcept
+		const std::string& getFile() const noexcept
 		{
 			return file_;
 		}
-		std::string GetOriginString() const noexcept
+		std::string getOriginString() const noexcept
 		{
 			std::ostringstream oss;
 			oss << file_ << "(" << line_ << ")";

@@ -11,7 +11,7 @@ TEST(tests, ThreadPoolTest)
 	std::vector<std::future<void>> tasks;
 	for (size_t i = 0; i < task_number; i++)
 	{
-		tasks.push_back(Singleton<ThreadPool>::instance().AsyncPackagedTask([&, count_sum, spMutex] {
+		tasks.push_back(Singleton<ThreadPool>::instance().packagedTask([&, count_sum, spMutex] {
 			for (size_t i = 0; i < 1024; i++)
 			{
 				std::lock_guard<std::mutex> Lock(*spMutex);
