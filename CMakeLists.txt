@@ -7,6 +7,7 @@ find_package(spdlog CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
 find_package(GTest CONFIG REQUIRED)
+find_package(skyr-url CONFIG REQUIRED)
 enable_testing()
 
 
@@ -70,6 +71,7 @@ target_include_directories(${This} PRIVATE src)
 set(DependentLibraries ${DependentLibraries} jsoncpp_lib)
 set(DependentLibraries ${DependentLibraries} asio)
 set(DependentLibraries ${DependentLibraries} spdlog::spdlog_header_only)
+set(DependentLibraries ${DependentLibraries} skyr::skyr-url)
 target_link_libraries(${This} PRIVATE ${DependentLibraries})
 
 #build tests

@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 #include <utility/Utility.h>
 using namespace GreyDawn;
 
@@ -26,7 +26,6 @@ TEST(tests, ThreadPoolTest)
 	ASSERT_EQ(*count_sum, task_number * 1024);
 	ASSERT_TRUE("Pass");
 }
-#include <skyr/url.hpp>
 TEST(tests, ParseJsonTest)
 {
 	std::string json_string = "{\"test\":\"pass\"}";
@@ -36,9 +35,5 @@ TEST(tests, ParseJsonTest)
 	auto opt = getJsonField<std::string>(json_value, "test");
 	ASSERT_TRUE(opt.has_value());
 	ASSERT_EQ(opt.value(), "pass");
-	auto url = skyr::url("http://example.org/");
-	//std::cout << url << std::endl;
-	//std::cout << url.pathname() << std::endl;
-
 }
 
