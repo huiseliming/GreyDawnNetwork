@@ -1,5 +1,6 @@
 ﻿#include <gtest/gtest.h>
 #include <utility/Utility.h>
+#include <filesystem>
 using namespace GreyDawn;
 
 TEST(tests, ThreadPoolTest)
@@ -40,5 +41,9 @@ TEST(tests, ParseJsonTest)
 TEST(tests, DynamicLibraryTest)
 {
 	DynamicLibrary sum_dynamic_library;
-	//sum_dynamic_library.Load("");
+	ASSERT_TRUE(sum_dynamic_library.Load(std::filesystem::current_path().string(),"SumDynamicLibrary"));
+	int (*fpSum)(int,int) = (int(*)(int,int))sum_dynamic_library.GetProcedure("Sum");
+	int x = 3, y = 8;
+	ASSERT_TRUE(fpSum != nullptr);
+	ASSERT_TRUE(fpSum(3,8) == 11);
 }

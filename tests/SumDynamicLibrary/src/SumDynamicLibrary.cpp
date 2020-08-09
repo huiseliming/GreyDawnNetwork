@@ -1,6 +1,6 @@
 
 extern "C"{
-    int Sum(int x) {
-        return x * x;
+    int Sum(int x, int y) {
+        return x + y;
     }
 }
