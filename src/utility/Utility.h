@@ -6,12 +6,13 @@
 #include "Exception.h"
 #include "Singleton.h"
 #include "ThreadPool.h"
+#include "DynamicLibrary.h"
 
 
 namespace GreyDawn
 {
 	//JsonString Convert To JsonObject
-	bool parseJsonStringToJsonValue(std::string json_string, Json::Value& json_value);
+	bool ParseJsonStringToJsonValue(std::string json_string, Json::Value& json_value);
 
 	template<typename T>
 	std::optional<T> getJsonField(Json::Value& json_value, std::string_view field)
@@ -22,9 +23,9 @@ namespace GreyDawn
 		return opt;
 	}
 
-	bool readJsonFile(std::string file_path, Json::Value& json_value);
+	bool ReadJsonFile(std::string file_path, Json::Value& json_value);
 
-	bool writeJsonFile(std::string file_path, Json::Value& json_value);
+	bool WriteJsonFile(std::string file_path, Json::Value& json_value);
 }
 
 

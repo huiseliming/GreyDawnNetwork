@@ -11,7 +11,7 @@ TEST(tests, ThreadPoolTest)
 	std::vector<std::future<void>> tasks;
 	for (size_t i = 0; i < task_number; i++)
 	{
-		tasks.push_back(Singleton<ThreadPool>::instance().packagedTask([&, count_sum, spMutex] {
+		tasks.push_back(Singleton<ThreadPool>::Instance().PackagedTask([&, count_sum, spMutex] {
 			for (size_t i = 0; i < 1024; i++)
 			{
 				std::lock_guard<std::mutex> Lock(*spMutex);
@@ -30,10 +30,15 @@ TEST(tests, ParseJsonTest)
 {
 	std::string json_string = "{\"test\":\"pass\"}";
 	Json::Value json_value;
-	ASSERT_TRUE(parseJsonStringToJsonValue(json_string, json_value));
+	ASSERT_TRUE(ParseJsonStringToJsonValue(json_string, json_value));
 	ASSERT_EQ(json_value["test"].asString(), "pass");
 	auto opt = getJsonField<std::string>(json_value, "test");
 	ASSERT_TRUE(opt.has_value());
 	ASSERT_EQ(opt.value(), "pass");
 }
 
+TEST(tests, DynamicLibraryTest)
+{
+	DynamicLibrary sum_dynamic_library;
+	//sum_dynamic_library.Load("");
+}
