@@ -42,7 +42,7 @@ TEST(tests, ParseJsonTest)
 TEST(tests, DynamicLibraryTest)
 {
 	DynamicLibrary sum_dynamic_library;
-	ASSERT_TRUE(sum_dynamic_library.Load(Utility::GetExecuteFileDirectoryAbsolutePath(),"SumDynamicLibrary"));
+	ASSERT_TRUE(sum_dynamic_library.Load(GetExecuteFileDirectoryAbsolutePath(),"SumDynamicLibrary"));
 	int (*fpSum)(int,int) = (int(*)(int,int))sum_dynamic_library.GetProcedure("Sum");
 	int x = 3, y = 8;
 	ASSERT_TRUE(fpSum != nullptr);

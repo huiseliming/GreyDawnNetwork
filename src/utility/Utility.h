@@ -6,6 +6,8 @@
 #include "Exception.h"
 #include "Singleton.h"
 #include "ThreadPool.h"
+#include "DynamicLibrary.h"
+#include "PlatfromAbstraction.h"
 
 
 namespace GreyDawn
@@ -27,17 +29,6 @@ namespace GreyDawn
 		bool ReadJsonFile(std::string file_path, Json::Value& json_value);
 
 		bool WriteJsonFile(std::string file_path, Json::Value& json_value);
-
-
-		/**
-		 * @brief Get the absolute path of the executable file directory
-		 *
-		 * @return  If failed return empty string else return the path
-		 *
-		 * @note
-		 */
-		std::string GetExecuteFileDirectoryAbsolutePath();
-		std::string GetExecuteFileAbsolutePath();
 	}
 }
 
