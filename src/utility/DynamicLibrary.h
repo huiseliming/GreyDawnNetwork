@@ -34,6 +34,7 @@ public:
     {
         this->library_handle = dynamic_library.library_handle;
         dynamic_library.library_handle = nullptr;
+        return *this;
     }
 
 #ifdef _WIN32
