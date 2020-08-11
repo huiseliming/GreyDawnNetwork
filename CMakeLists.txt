@@ -10,8 +10,6 @@ find_package(OpenSSL REQUIRED)
 #find_package(skyr-url CONFIG REQUIRED)
 enable_testing()
 
-
-
 if (MSVC)
     # MSVC链接静态库(/MT),替换/MD为/MT来进行链接静态库,使用RUNTIME_STATIC_LINK控制链接静态库还是动态库
     if(MSVC AND RUNTIME_STATIC_LINK)
@@ -56,14 +54,27 @@ add_subdirectory(ThirdParty)
 
 #build library
 FILE(GLOB_RECURSE SourceFiles  
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/*.h
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/src/*.h
     )
+macro(SetPlatformImplSourceFiles SourceFiles Platform)
+    foreach(SourceFile ${SourceFiles})
+        if( ( ${SourceFile} MATCHES ".*\\/PlatformImpl\\/.*") AND 
+        NOT ( ${SourceFile} MATCHES ".*\\/PlatformImpl\\/.*${Platform}\\.cpp"))
+            list(REMOVE_ITEM SourceFiles ${SourceFile})
+        endif()
+    endforeach()
+endmacro()
 
-add_library(${This} STATIC
-    ${SourceFiles} 
-     )
+if (MSVC)
+    SetPlatformImplSourceFiles("${SourceFiles}" "Win32")
+endif()
+
+if (UNIX)
+    SetPlatformImplSourceFiles("${SourceFiles}" "Linux")
+endif()
+
+add_library(${This} STATIC ${SourceFiles})
 
 target_include_directories(${This} PUBLIC include)
 target_include_directories(${This} PRIVATE src)

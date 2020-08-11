@@ -11,7 +11,7 @@ namespace GreyDawn
     public:
         static T& Instance()
         {
-            //必须支持c++11特性，c++11以前不保证static local初始化的线程安全
+            //锟斤拷锟斤拷支锟斤拷c++11锟斤拷锟皆ｏ拷c++11锟斤拷前锟斤拷锟斤拷证static local锟斤拷始锟斤拷锟斤拷锟竭程帮拷全
             static Singleton<T> singleton;
             return singleton;
         }
