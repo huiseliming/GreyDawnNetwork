@@ -1,4 +1,4 @@
-#include "../PlatfromAbstraction.h"
+#include "../PlatformAbstraction.h"
 #include <unistd.h>
 #include <limits.h>
 #include <errno.h>

@@ -7,7 +7,7 @@
 #include "Singleton.h"
 #include "ThreadPool.h"
 #include "DynamicLibrary.h"
-#include "PlatfromAbstraction.h"
+#include "PlatformAbstraction.h"
 
 
 namespace GreyDawn

@@ -1,4 +1,4 @@
-#include "../PlatfromAbstraction.h"
+#include "../PlatformAbstraction.h"
 #include <Windows.h>
 #include <vector>
 #include "utility/Logger.h"
@@ -67,19 +67,19 @@ namespace GreyDawn
 	std::string TranslateErrorCode(uint32_t error_code)
 	{
 		char* message_buffer = nullptr;
-		//»ñÈ¡¸ñÊ½»¯´íÎó
+		//ï¿½ï¿½È¡ï¿½ï¿½Ê½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 		const DWORD nMsgLen = FormatMessageA(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
 			nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 			reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr
 			);
-		//³¤¶ÈÐ¡ÓÚ0ËµÃ÷Î´»ñÈ¡µ½¸ñÊ½»¯µÄ´íÎó
+		//ï¿½ï¿½ï¿½ï¿½Ð¡ï¿½ï¿½0Ëµï¿½ï¿½Î´ï¿½ï¿½È¡ï¿½ï¿½ï¿½ï¿½Ê½ï¿½ï¿½ï¿½Ä´ï¿½ï¿½ï¿½
 		if (nMsgLen <= 0)
 			return "Unidentified error code";
-		// ¿½±´×Ö·û´®
+		// ï¿½ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½
 		std::string errorMsg = message_buffer;
-		// Õâ¸ö×Ö·û´®ÊÇWindowsµÄÏµÍ³ÄÚ´æ£¬¹é»¹ÏµÍ³
+		// ï¿½ï¿½ï¿½ï¿½Ö·ï¿½ï¿½ï¿½ï¿½ï¿½Windowsï¿½ï¿½ÏµÍ³ï¿½Ú´æ£¬ï¿½é»¹ÏµÍ³
 		LocalFree(message_buffer);
 		return errorMsg;
 	}
