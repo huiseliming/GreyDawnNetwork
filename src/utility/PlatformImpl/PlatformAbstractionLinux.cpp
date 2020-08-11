@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <limits.h>
 #include <errno.h>
+#include <vector>
+#include "utility/Logger.h"
 
 namespace GreyDawn
 {
@@ -23,13 +25,13 @@ namespace GreyDawn
 	std::string GetExecuteFileAbsolutePath()
 	{
 		std::string absolute_path;
-		std::vector<char> current_absolute_path(MAX_PATH);
-		int cnt = readlink("/proc/self/exe", &current_absolute_path[0], MAX_PATH);
+		std::vector<char> current_absolute_path(PATH_MAX);
+		int cnt = readlink("/proc/self/exe", &current_absolute_path[0], PATH_MAX);
 		if (cnt < 0) {
 			GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
 		}
-		else if (cnt >= MAX_PATH) {
-			int max_path = MAX_PATH;
+		else if (cnt >= PATH_MAX) {
+			int max_path = PATH_MAX;
 			for (size_t i = 0; i < 4; i++)
 			{
 				max_path = max_path * 2;

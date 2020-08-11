@@ -9,7 +9,7 @@ namespace GreyDawn
    bool DynamicLibrary::Load(const std::string& path, const std::string& name) 
    {
        Unload();
-       std::string original_path = Utility::GetExecuteFileDirectoryAbsolutePath();
+       std::string original_path = GetExecuteFileDirectoryAbsolutePath();
        (void)chdir(path.c_str());
        const auto library_path = fmt::format("{}/lib{}.so", path.c_str(), name.c_str());
        library_handle = dlopen(library_path.c_str(), RTLD_NOW);
