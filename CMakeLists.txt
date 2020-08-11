@@ -3,16 +3,16 @@ cmake_minimum_required(VERSION 3.12)
 set(This GreyDawnNetWork)
 project(${This})
 message(STATUS "compiler: " ${CMAKE_CXX_COMPILER_ID})
+find_package(GTest CONFIG REQUIRED)
 find_package(spdlog CONFIG REQUIRED)
 find_package(jsoncpp CONFIG REQUIRED)
 find_package(OpenSSL REQUIRED)
-find_package(GTest CONFIG REQUIRED)
-find_package(skyr-url CONFIG REQUIRED)
+#find_package(skyr-url CONFIG REQUIRED)
 enable_testing()
 
 
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if (MSVC)
     # MSVC链接静态库(/MT),替换/MD为/MT来进行链接静态库,使用RUNTIME_STATIC_LINK控制链接静态库还是动态库
     if(MSVC AND RUNTIME_STATIC_LINK)
         foreach(flag
@@ -71,7 +71,11 @@ target_include_directories(${This} PRIVATE src)
 set(DependentLibraries ${DependentLibraries} jsoncpp_lib)
 set(DependentLibraries ${DependentLibraries} asio)
 set(DependentLibraries ${DependentLibraries} spdlog::spdlog_header_only)
-set(DependentLibraries ${DependentLibraries} skyr::skyr-url)
+
+if (UNIX)
+    set(DependentLibraries ${DependentLibraries} pthread dl)
+endif()
+#set(DependentLibraries ${DependentLibraries} skyr::skyr-url)
 target_link_libraries(${This} PRIVATE ${DependentLibraries})
 
 #build tests

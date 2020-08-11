@@ -1,6 +1,7 @@
 ﻿#include <gtest/gtest.h>
 #include <utility/Utility.h>
 #include <filesystem>
+#include <utility/DynamicLibrary.h>
 using namespace GreyDawn;
 
 TEST(tests, ThreadPoolTest)
@@ -31,9 +32,9 @@ TEST(tests, ParseJsonTest)
 {
 	std::string json_string = "{\"test\":\"pass\"}";
 	Json::Value json_value;
-	ASSERT_TRUE(ParseJsonStringToJsonValue(json_string, json_value));
+	ASSERT_TRUE(Utility::ParseJsonStringToJsonValue(json_string, json_value));
 	ASSERT_EQ(json_value["test"].asString(), "pass");
-	auto opt = getJsonField<std::string>(json_value, "test");
+	auto opt = Utility::GetJsonField<std::string>(json_value, "test");
 	ASSERT_TRUE(opt.has_value());
 	ASSERT_EQ(opt.value(), "pass");
 }
@@ -41,7 +42,7 @@ TEST(tests, ParseJsonTest)
 TEST(tests, DynamicLibraryTest)
 {
 	DynamicLibrary sum_dynamic_library;
-	ASSERT_TRUE(sum_dynamic_library.Load(std::filesystem::current_path().string(),"SumDynamicLibrary"));
+	ASSERT_TRUE(sum_dynamic_library.Load(Utility::GetExecuteFileDirectoryAbsolutePath(),"SumDynamicLibrary"));
 	int (*fpSum)(int,int) = (int(*)(int,int))sum_dynamic_library.GetProcedure("Sum");
 	int x = 3, y = 8;
 	ASSERT_TRUE(fpSum != nullptr);

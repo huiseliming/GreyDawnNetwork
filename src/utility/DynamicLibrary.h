@@ -1,12 +1,13 @@
 ﻿#pragma once 
-#if defined(_MSC_VER) && defined(_WIN32)
+#ifdef _WIN32
 #include <Windows.h>
-#elif defined(__GNUC__) && (defined(__linux__) || defined(__MINGW64__) || defined(__MINGW32__) )
+#elif __linux__
 #include <dlfcn.h>
 #include <sys/param.h>
 #include <unistd.h>
 #endif
 #include <vector>
+#include "Utility.h"
 
 namespace GreyDawn
 {
@@ -35,7 +36,7 @@ public:
         dynamic_library.library_handle = nullptr;
     }
 
-#if defined(_MSC_VER) && defined(_WIN32)
+#ifdef _WIN32
     bool Load(const std::string& path, const std::string& name)
     {
         Unload();
@@ -59,33 +60,36 @@ public:
         return GetProcAddress(library_handle, name.c_str());
     }
     HMODULE library_handle = nullptr;
-#elif defined(__GNUC__) && (defined(__linux__) || defined(__MINGW64__) || defined(__MINGW32__) )
-//    bool Load(const std::string& path, const std::string& name) {
-//        Unload();
-//        std::vector< char > original_path(MAXPATHLEN);
-//        (void)getcwd(&originalPath[0], originalPath.size());
-//        (void)chdir(path.c_str());
-//        const auto library = fmt::format(
-//            "{}/{}.so",
-//            path.c_str(),
-//            name.c_str(),
-//            );
-//        library_handle = dlopen(library.c_str(), RTLD_NOW);
-//        (void)chdir(&original_path[0]);
-//        return (library_handle != NULL);
-//}
-//
-//    void Unload() {
-//        if (library_handle != NULL) {
-//            (void)dlclose(library_handle);
-//            library_handle = NULL;
-//        }
-//    }
-//
-//    void* GetProcedure(const std::string& name) {
-//        return dlsym(library_handle, name.c_str());
-//    }
-//    void* library_handle = nullptr;
+#elif __linux__
+   bool Load(const std::string& path, const std::string& name) {
+       Unload();
+       std::string original_path = Utility::GetExecuteFileDirectoryAbsolutePath();
+       std::cout << original_path << std::endl; 
+        std::cout << fmt::format(           "{}/{}.so",
+           path.c_str(),
+           name.c_str()) << std::endl; 
+       (void)chdir(path.c_str());
+       const auto library_path = fmt::format(
+           "{}/lib{}.so",
+           path.c_str(),
+           name.c_str()
+           );
+       library_handle = dlopen(library_path.c_str(), RTLD_NOW);
+       (void)chdir(original_path.c_str());
+       return (library_handle != NULL);
+}
+
+   void Unload() {
+       if (library_handle != NULL) {
+           (void)dlclose(library_handle);
+           library_handle = NULL;
+       }
+   }
+
+   void* GetProcedure(const std::string& name) {
+       return dlsym(library_handle, name.c_str());
+   }
+   void* library_handle = nullptr;
 #else
 #   error "Unknown Compiler"
 #endif 
