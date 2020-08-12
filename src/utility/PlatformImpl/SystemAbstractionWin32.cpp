@@ -4,15 +4,6 @@
 
 namespace GreyDawn
 {
-    /**
-     * Get the absolute path of the executable file directory
-     *
-     * @param[in] error_code
-     *     The error code
-     *
-     * @return 
-     *     The translated string (node: return value is thread_local local static)
-     */
     std::string& TranslateErrorCode(DWORD error_code)
     {
         thread_local static std::string error_message;

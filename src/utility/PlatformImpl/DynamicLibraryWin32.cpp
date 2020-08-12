@@ -6,14 +6,25 @@ namespace GreyDawn
     bool DynamicLibrary::Load(const std::string& path, const std::string& name)
     {
         Unload();
-        //std::vector< char > original_path(MAX_PATH);
-        //(void)GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
-        //(void)SetCurrentDirectoryA(path.c_str());
+        //保存当前路径，设置当前路径到动态库路径，防止动态库加载依赖文件所在路径
+        std::vector< char > original_path(MAX_PATH);
+        DWORD length = GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
+        if (length == 0) {
+            GD_LOG_ERROR("[GetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
+            return false;
+        } else if (length > MAX_PATH) {
+            original_path.resize(length);
+            DWORD length = GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
+        }
+        if(!SetCurrentDirectoryA(path.c_str()))
+            GD_LOG_ERROR("[SetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
         const auto library = fmt::format("{}/{}.dll", path.c_str(), name.c_str());
         library_handle = LoadLibraryA(library.c_str());
         if (!library_handle)
             GD_LOG_ERROR("[LoadLibraryA Error>{}]", TranslateErrorCode(GetLastError()));
-        //(void)SetCurrentDirectoryA(&original_path[0]);
+        if (!SetCurrentDirectoryA(&original_path[0])) {
+            GD_LOG_ERROR("[SetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
+        }
         return (library_handle != NULL);
     }
 
