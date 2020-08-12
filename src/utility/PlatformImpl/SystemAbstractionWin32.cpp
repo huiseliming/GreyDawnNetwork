@@ -4,6 +4,38 @@
 
 namespace GreyDawn
 {
+    /**
+     * Get the absolute path of the executable file directory
+     *
+     * @param[in] error_code
+     *     The error code
+     *
+     * @return 
+     *     The translated string (node: return value is thread_local local static)
+     */
+    std::string& TranslateErrorCode(DWORD error_code)
+    {
+        thread_local static std::string error_message;
+        char* message_buffer = nullptr;
+        //获取格式化错误
+        const DWORD message_len = FormatMessageA(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+            nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+            reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr
+            );
+        //长度小于0说明未获取到格式化的错误
+        if (message_len <= 0) {
+            error_message = "Unidentified error code";
+        } else {
+            //拷贝字符串
+            error_message = message_buffer;
+            //这个字符串是Windows的系统内存，归还系统
+            LocalFree(message_buffer);
+        }
+        return error_message;
+    }
+
     std::string& GetPathSeparators()
     {
         static std::string path_separators = "\\";
@@ -62,29 +94,6 @@ namespace GreyDawn
             return absolute_path;
         }
         return absolute_path;
-    }
-
-    std::string& TranslateErrorCode(DWORD error_code)
-    {
-        thread_local static std::string error_message;
-        char* message_buffer = nullptr;
-        //获取格式化错误
-        const DWORD message_len = FormatMessageA(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-            nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-            reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr
-            );
-        //长度小于0说明未获取到格式化的错误
-        if (message_len <= 0) {
-            error_message = "Unidentified error code";
-        } else {
-            //拷贝字符串
-            error_message = message_buffer;
-            //这个字符串是Windows的系统内存，归还系统
-            LocalFree(message_buffer);
-        }
-        return error_message;
     }
 }
 

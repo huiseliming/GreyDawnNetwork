@@ -2,6 +2,7 @@
 #include <optional>
 #include <json/json.h>
 #include <spdlog/spdlog.h>
+#include "Utf8.h"
 #include "Logger.h"
 #include "Exception.h"
 #include "Singleton.h"
