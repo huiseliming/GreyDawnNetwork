@@ -9,19 +9,19 @@ namespace GreyDawn
    bool DynamicLibrary::Load(const std::string& path, const std::string& name) 
    {
         Unload();
-        // std::string original_path = GetExecuteFileDirectoryAbsolutePath();
-        // if(chdir(path.c_str()) < 0){
-        //     GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
-        //     return false;
-        // }
+        //保存当前路径，设置当前路径到动态库路径，防止动态库加载依赖文件所在路径
+        std::string original_path = GetExecuteFileDirectoryAbsolutePath();
+        if(chdir(path.c_str()) < 0){
+            GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
+            return false;
+        }
         const auto library_path = fmt::format("{}/lib{}.so", path.c_str(), name.c_str());
         library_handle = dlopen(library_path.c_str(), RTLD_NOW);
         if(!library_handle)
             GD_LOG_ERROR("[dlopen dlerror>{}]", dlerror());
-        // if(chdir(original_path.c_str()) < 0){
-        //     GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
-        //     return false;
-        // }
+        if(chdir(original_path.c_str()) < 0){
+            GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
+        }
         return (library_handle != NULL);
     }
 
