@@ -34,7 +34,10 @@ namespace GreyDawn
      * @return  
      *     The translated string
     */
-    std::string TranslateErrorCode(uint32_t error_code);
+    const char* TranslateErrorCode(uint32_t error_code);
+
+
+
 }
 
 

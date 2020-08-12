@@ -65,7 +65,10 @@ namespace GreyDawn
         }
         return absolute_path;
     }
-
+    const char*  TranslateErrorCode(uint32_t error_code)
+    {
+        return strerror(error_code);
+    }
 }
 
 

@@ -47,4 +47,6 @@ TEST(tests, DynamicLibraryTest)
 	int x = 3, y = 8;
 	ASSERT_TRUE(fpSum != nullptr);
 	ASSERT_TRUE(fpSum(3,8) == 11);
+	//DynamicLibrary unknow_dynamic_library;
+	//ASSERT_FALSE(sum_dynamic_library.Load(GetExecuteFileDirectoryAbsolutePath(),"UnknowDynamicLibrary"));
 }

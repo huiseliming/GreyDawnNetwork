@@ -64,7 +64,7 @@ namespace GreyDawn
         return absolute_path;
     }
 
-    std::string TranslateErrorCode(uint32_t error_code)
+    const char* TranslateErrorCode(uint32_t error_code)
     {
         char* message_buffer = nullptr;
         //获取格式化错误
@@ -78,10 +78,10 @@ namespace GreyDawn
         if (message_len <= 0)
             return "Unidentified error code";
         //拷贝字符串
-        std::string error_message = message_buffer;
+        thread_local static std::string error_message = message_buffer;
         //这个字符串是Windows的系统内存，归还系统
         LocalFree(message_buffer);
-        return error_message;
+        return error_message.c_str();
     }
 }
 
