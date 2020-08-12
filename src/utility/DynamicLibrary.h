@@ -14,7 +14,7 @@ namespace GreyDawn
     DynamicLibrary(const std::string& path, const std::string& name);
     DynamicLibrary(const DynamicLibrary& thread_pool) = delete;
     DynamicLibrary(DynamicLibrary&& dynamic_library);
-    DynamicLibrary& operator=(const DynamicLibrary& thread_pool) = delete;
+    DynamicLibrary& operator=(const DynamicLibrary& dynamic_library) = delete;
     DynamicLibrary& operator=(DynamicLibrary&& dynamic_library);
     ~DynamicLibrary();
 

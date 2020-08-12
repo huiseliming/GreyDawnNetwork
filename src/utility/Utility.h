@@ -9,7 +9,7 @@
 #include "ThreadPool.h"
 #include "DynamicLibrary.h"
 #include "SystemAbstraction.h"
-
+#include "Subprocess.h"
 
 namespace GreyDawn
 {
