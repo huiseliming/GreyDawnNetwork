@@ -29,14 +29,12 @@ namespace GreyDawn
      * Get the absolute path of the executable file directory
      *
      * @param[in] error_code
-     *     error_code The error code
-     * 
-     * @return  
-     *     The translated string
-    */
+     *     The error code
+     *
+     * @return 
+     *     The translated string (node: return value is thread_local local static)
+     */
     const char* TranslateErrorCode(uint32_t error_code);
-
-
 
 }
 
