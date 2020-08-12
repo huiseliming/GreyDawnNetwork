@@ -23,16 +23,24 @@ TEST(tests, EncodeAscii)
 }
 
 
-TEST(tests, EncodeChinese)
+TEST(tests, EncodeChinese) 
 {
-    //Utf8 "你好"
-    const std::vector<uint8_t> expected_encoding{ 0xE4, 0xBD , 0xA0, 0xE5 , 0xA5, 0xBD};
-    //Unicode "你好"
-    const auto actual_encoding = Utf8::Encode({ 0x4F60,0x597d });
+    //中文
+    const std::vector<uint8_t> expected_encoding{ 0xE4, 0xB8 , 0xAD, 0xE6 , 0x96, 0x87 };
+    const auto actual_encoding = Utf8::Encode({ 0x4E2D,0x6587 });
+    ASSERT_EQ(expected_encoding, actual_encoding);
+    //不
+    const std::vector<uint8_t> expected_encoding{ 0xF0, 0xA3 , 0x8E, 0xB4 };
+    const auto actual_encoding = Utf8::Encode({ 0x233B4 });
     ASSERT_EQ(expected_encoding, actual_encoding);
 }
 
-
-
+TEST(tests, Symbols)
+{
+    //A≢Α.
+    const std::vector<uint8_t> expected_encoding{ 0x41, 0xE2 , 0x89, 0xA2 , 0xCE, 0x91, 0x2E };
+    const auto actual_encoding = Utf8::Encode({ 0x0041, 0x2262, 0x0391, 0x002E });
+    ASSERT_EQ(expected_encoding, actual_encoding);
+}
 
 
