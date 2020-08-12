@@ -17,10 +17,10 @@ namespace GreyDawn
             sinks.push_back(std::make_shared<spdlog::sinks::stdout_color_sink_mt>());
             sinks.push_back(std::make_shared<spdlog::sinks::daily_file_sink_mt>("logs/daily_logger_mt.log", 23, 59));
             //auto defaultLogger = std::make_shared<spdlog::logger>("default",std::begin(sinks),std::end(sinks));
-            return std::make_shared<spdlog::async_logger>("default_Logger", std::begin(sinks), std::end(sinks), spdlog::thread_pool());
+            return std::make_shared<spdlog::async_logger>("default_logger", std::begin(sinks), std::end(sinks), spdlog::thread_pool());
         };
-        static std::shared_ptr<spdlog::logger> default_Logger = init();
-        return default_Logger;
+        static std::shared_ptr<spdlog::logger> default_logger = init();
+        return default_logger;
     }
 
 }
