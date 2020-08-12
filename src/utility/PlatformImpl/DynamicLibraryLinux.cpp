@@ -1,4 +1,4 @@
-#include "../DynamicLibrary.h"
+#include "utility/DynamicLibrary.h"
 #include <dlfcn.h>
 #include <sys/param.h>
 #include <unistd.h>

@@ -1,4 +1,4 @@
-#include "../DynamicLibrary.h"
+#include "utility/DynamicLibrary.h"
 
 namespace GreyDawn
 {
