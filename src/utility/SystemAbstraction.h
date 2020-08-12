@@ -1,9 +1,14 @@
 #pragma once
+#ifdef  _WIN32
+#include <Windows.h>
+#endif //  _WIN32
+
+
 #include <string>
 
 namespace GreyDawn
 {
-
+    
     /**
      * Get current operating system path separators
      *
@@ -34,7 +39,7 @@ namespace GreyDawn
      * @return 
      *     The translated string (node: return value is thread_local local static)
      */
-    const char* TranslateErrorCode(uint32_t error_code);
+    std::string& TranslateErrorCode(DWORD error_code);
 
 }
 

@@ -1,5 +1,4 @@
 #include "utility/SystemAbstraction.h"
-#include <Windows.h>
 #include <vector>
 #include "utility/Logger.h"
 
@@ -33,7 +32,7 @@ namespace GreyDawn
         DWORD path_length = GetModuleFileNameA(NULL, &current_absolute_path[0], MAX_PATH);
         if (path_length == 0) {
             DWORD error_code = GetLastError();
-            GD_LOG_ERROR("[ErrorCode:{:d},ErrorFormat:{}]", error_code, TranslateErrorCode(error_code));
+            GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
         }
         else if (path_length >= MAX_PATH) {
             int max_path = MAX_PATH;
@@ -43,7 +42,8 @@ namespace GreyDawn
                 current_absolute_path.resize(max_path);
                 path_length = GetModuleFileNameA(NULL, &current_absolute_path[0], MAX_PATH);
                 if (path_length < 0) {
-                    GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
+                    DWORD error_code = GetLastError();
+                    GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
                 }
                 else if (path_length >= max_path) {
 
@@ -64,8 +64,9 @@ namespace GreyDawn
         return absolute_path;
     }
 
-    const char* TranslateErrorCode(uint32_t error_code)
+    std::string& TranslateErrorCode(DWORD error_code)
     {
+        thread_local static std::string error_message;
         char* message_buffer = nullptr;
         //获取格式化错误
         const DWORD message_len = FormatMessageA(
@@ -75,13 +76,15 @@ namespace GreyDawn
             reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr
             );
         //长度小于0说明未获取到格式化的错误
-        if (message_len <= 0)
-            return "Unidentified error code";
-        //拷贝字符串
-        thread_local static std::string error_message = message_buffer;
-        //这个字符串是Windows的系统内存，归还系统
-        LocalFree(message_buffer);
-        return error_message.c_str();
+        if (message_len <= 0) {
+            error_message = "Unidentified error code";
+        } else {
+            //拷贝字符串
+            error_message = message_buffer;
+            //这个字符串是Windows的系统内存，归还系统
+            LocalFree(message_buffer);
+        }
+        return error_message;
     }
 }
 

@@ -17,7 +17,7 @@ namespace GreyDawn
         const auto library_path = fmt::format("{}/lib{}.so", path.c_str(), name.c_str());
         library_handle = dlopen(library_path.c_str(), RTLD_NOW);
         if(!library_handle)
-            GD_LOG_ERROR("[dlerror>{}]", dlerror());
+            GD_LOG_ERROR("[dlopen dlerror>{}]", dlerror());
         // if(chdir(original_path.c_str()) < 0){
         //     GD_LOG_ERROR("[errno:{:d},strerror:{}]", errno, strerror(errno));
         //     return false;
@@ -29,7 +29,7 @@ namespace GreyDawn
     {
         if (library_handle != NULL) {
             if(dlclose(library_handle))
-                GD_LOG_ERROR("[dlerror>{}]", dlerror());
+                GD_LOG_ERROR("[dlclose dlerror>{}]", dlerror());
             library_handle = nullptr;
         }
     }
@@ -38,8 +38,6 @@ namespace GreyDawn
     {
         return dlsym(library_handle, name.c_str());
     }
-
-
 }
 
 
