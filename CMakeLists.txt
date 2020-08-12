@@ -81,7 +81,7 @@ target_include_directories(${This} PRIVATE src)
 
 set(DependentLibraries ${DependentLibraries} jsoncpp_lib)
 set(DependentLibraries ${DependentLibraries} asio)
-set(DependentLibraries ${DependentLibraries} spdlog::spdlog_header_only)
+set(DependentLibraries ${DependentLibraries} spdlog::spdlog)
 
 if (UNIX)
     set(DependentLibraries ${DependentLibraries} pthread dl)
