@@ -1,7 +1,8 @@
 ﻿#pragma once
 #include <stddef.h>
 #define REPLACEMENT_INVALID_CODE_POINT
-
+#define UNUSE_CODE_POINT_BEGIN 0xD800
+#define UNUSE_CODE_POINT_END 0xDFFF
 
 namespace GreyDawn
 {
@@ -33,9 +34,13 @@ namespace GreyDawn
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x1F) + 0xC0));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                 } else if (code_point < 0x10000) {
-                    utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x0F) + 0xE0));
-                    utf8_bytes.push_back(uint8_t(((code_point >> 6)  & 0x3F) + 0x80));
-                    utf8_bytes.push_back(uint8_t(( code_point & 0x3F) + 0x80));
+                    if ((code_point >= UNUSE_CODE_POINT_BEGIN) && (code_point <= UNUSE_CODE_POINT_END)) { // Unicode在范围D800-DFFF中不存在任何字符
+                        utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
+                    } else {
+                        utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x0F) + 0xE0));
+                        utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
+                        utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
+                    }
 #ifdef REPLACEMENT_INVALID_CODE_POINT
                 } else if (code_point < 0x200000) {
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x07) + 0xF0));
@@ -46,8 +51,7 @@ namespace GreyDawn
                     utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
                 }
 #else
-            }
-                else if (code_point < 0x2000000) {
+                } else if (code_point < 0x2000000) {
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x07) + 0xF0));
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
@@ -60,7 +64,7 @@ namespace GreyDawn
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
-                }else{
+                } else {
                     utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
                     utf8_bytes.push_back(uint8_t(((code_point >> 30) & 0x01) + 0xFC));
                     utf8_bytes.push_back(uint8_t(((code_point >> 24) & 0x3F) + 0x80));

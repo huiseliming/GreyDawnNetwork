@@ -49,8 +49,9 @@ TEST(tests, Symbols)
 
 TEST(tests, InvalidCodePoint)
 {
-    //A≢Α.
     const std::vector<uint8_t> expected_encoding(Utf8::kUtf8EncodeReplacementCharacter.begin(), Utf8::kUtf8EncodeReplacementCharacter.end());
-    ASSERT_EQ(expected_encoding, Utf8::Encode({ 0x200000 }));
+    ASSERT_EQ(expected_encoding, Utf8::Encode({ 0xD801 }));
+    ASSERT_EQ(expected_encoding, Utf8::Encode({ 0xDFFE }));
+    ASSERT_EQ(expected_encoding, Utf8::Encode({ 0x2000000 }));
 }
 
