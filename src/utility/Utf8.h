@@ -1,6 +1,6 @@
 ﻿#pragma once
 #include <stddef.h>
-
+#define REPLACEMENT_INVALID_CODE_POINT
 
 
 namespace GreyDawn
@@ -14,7 +14,9 @@ namespace GreyDawn
         Utf8& operator=(const Utf8&) = delete;
         Utf8& operator=(Utf8&&) = delete;
     public:
-        using UnicodeCodePoint = uint32_t;
+    using UnicodeCodePoint = uint32_t;
+    inline static const std::array< uint8_t , 3> kUtf8EncodeReplacementCharacter = { 0xEF, 0xBF, 0xBD};
+    public:
         static std::vector<UnicodeCodePoint> AsciiToUnicode(const std::string& ascii)
         {
             return std::vector<uint32_t>(ascii.begin(),ascii.end());
@@ -34,18 +36,32 @@ namespace GreyDawn
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x0F) + 0xE0));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6)  & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(( code_point & 0x3F) + 0x80));
-                } else if (code_point < 0x2000000) {
+#ifdef REPLACEMENT_INVALID_CODE_POINT
+                } else if (code_point < 0x200000) {
+                    utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x07) + 0xF0));
+                    utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
+                    utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
+                    utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
+                } else {
+                    utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
+                }
+#else
+            }
+                else if (code_point < 0x2000000) {
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x07) + 0xF0));
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                 } else if (code_point < 0x40000000) {
+                    utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
+
                     utf8_bytes.push_back(uint8_t(((code_point >> 24) & 0x03) + 0xF8));
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                 }else{
+                    utf8_bytes.insert(utf8_bytes.end(), kUtf8EncodeReplacementCharacter.begin(), kUtf8EncodeReplacementCharacter.end());
                     utf8_bytes.push_back(uint8_t(((code_point >> 30) & 0x01) + 0xFC));
                     utf8_bytes.push_back(uint8_t(((code_point >> 24) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x3F) + 0x80));
@@ -53,6 +69,7 @@ namespace GreyDawn
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                 }
+#endif
             }
             return utf8_bytes;
         }
@@ -61,7 +78,7 @@ namespace GreyDawn
 
 
 
-
+#undef REPLACEMENT_INVALID_CODE_POINT
 
 
 
