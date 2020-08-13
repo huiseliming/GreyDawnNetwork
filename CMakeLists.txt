@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+﻿cmake_minimum_required(VERSION 3.12)
 
 set(This GreyDawnNetWork)
 project(${This})
@@ -74,7 +74,7 @@ if (UNIX)
     SetPlatformImplSourceFiles("${SourceFiles}" "Linux")
 endif()
 
-add_library(${This} STATIC ${SourceFiles})
+add_library(${This} STATIC ${SourceFiles} "src/utility/Utf8.cpp")
 
 target_include_directories(${This} PUBLIC include)
 target_include_directories(${This} PRIVATE src)
