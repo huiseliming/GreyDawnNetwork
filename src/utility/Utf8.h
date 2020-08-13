@@ -18,6 +18,10 @@ namespace GreyDawn
         inline static const UnicodeCodePoint kUnicodeReplacementCharacter = 0xFFFD;
         inline static const UnicodeCodePoint kReserveRangeBegin = 0xD800;
         inline static const UnicodeCodePoint kReserveRangeEnd = 0xDFFF;
+        inline thread_local static UnicodeCodePoint current_unicode_code_point = 0;
+        inline thread_local static size_t current_unicode_remaining_bytes = 0;
+        inline thread_local static size_t current_unicode_total_bytes = 0;
+        inline thread_local static bool tlsm_is_valid = true;
     public:
         static std::vector<UnicodeCodePoint> AsciiToUnicode(const std::string& ascii)
         {
@@ -78,48 +82,88 @@ namespace GreyDawn
             }
             return utf8_bytes;
         }
-
-        static std::vector<UnicodeCodePoint> Decode(const std::string& utf8_string) 
-        {
-            std::vector<UnicodeCodePoint> unicode_vector;
-
-            return unicode_vector;
-        }
         
         static std::vector<UnicodeCodePoint> Decode(const std::vector<uint8_t>& utf8_bytes)
         {
             std::vector<UnicodeCodePoint> unicode_output;
-            UnicodeCodePoint unicode_code_point = 0;
-            size_t remaining_bytes = 0;
+            current_unicode_code_point = 0;
+            current_unicode_remaining_bytes = 0;
+            current_unicode_total_bytes = 0;
+            tlsm_is_valid = true;
             for (auto utf8_byte : utf8_bytes)
             {
-                if (remaining_bytes == 0) {
+                if (current_unicode_remaining_bytes == 0) {
                     if ((utf8_byte & 0x80) == 0) {
                         unicode_output.push_back(utf8_byte);
                     } else if ((utf8_byte & 0xE0) == 0xC0) {
-                        remaining_bytes = 1;
-                        unicode_code_point += utf8_byte & 0x1F;
+                        current_unicode_remaining_bytes = 1;
+                        current_unicode_code_point += utf8_byte & 0x1F;
                     } else if ((utf8_byte & 0xF0) == 0xE0) {
-                        remaining_bytes = 2;
-                        unicode_code_point += utf8_byte & 0xF;
+                        current_unicode_remaining_bytes = 2;
+                        current_unicode_code_point += utf8_byte & 0xF;
                     } else if ((utf8_byte & 0xF8) == 0xF0) {
-                        remaining_bytes = 3;
-                        unicode_code_point += utf8_byte & 0x7;
+                        current_unicode_remaining_bytes = 3;
+                        current_unicode_code_point += utf8_byte & 0x7;
                     } else {
+                        tlsm_is_valid = false;
                         unicode_output.push_back(kUnicodeReplacementCharacter);
-                        unicode_code_point = 0;
+                    }
+                    current_unicode_total_bytes = current_unicode_remaining_bytes + 1;
+                } else if ((utf8_byte & 0xC0) != 0x80) { //检测不应出现的二进制格式
+                    tlsm_is_valid = false;
+                    unicode_output.push_back(kUnicodeReplacementCharacter);
+                    current_unicode_remaining_bytes = 0;
+                    current_unicode_code_point = 0;
+                    //重新将这个字节当作起始字节处理
+                    if ((utf8_byte & 0x80) == 0) {
+                        unicode_output.push_back(utf8_byte);
+                    }
+                    else if ((utf8_byte & 0xE0) == 0xC0) {
+                        current_unicode_remaining_bytes = 1;
+                        current_unicode_code_point += utf8_byte & 0x1F;
+                    }
+                    else if ((utf8_byte & 0xF0) == 0xE0) {
+                        current_unicode_remaining_bytes = 2;
+                        current_unicode_code_point += utf8_byte & 0xF;
+                    }
+                    else if ((utf8_byte & 0xF8) == 0xF0) {
+                        current_unicode_remaining_bytes = 3;
+                        current_unicode_code_point += utf8_byte & 0x7;
+                    }
+                    else {
+                        tlsm_is_valid = false;
+                        unicode_output.push_back(kUnicodeReplacementCharacter);
                     }
                 } else {
-                    unicode_code_point <<= 6;
-                    unicode_code_point += (utf8_byte & 0x3F);
-                    remaining_bytes--;
-                    if (remaining_bytes == 0) {
-                        unicode_output.push_back(unicode_code_point);
-                        unicode_code_point = 0;
+                    current_unicode_code_point <<= 6;
+                    current_unicode_code_point += (utf8_byte & 0x3F);
+                    if (--current_unicode_remaining_bytes == 0) {
+                        //检测非最简小长度的实现
+                        if (((current_unicode_total_bytes >= 2) && (current_unicode_code_point < 0x00080))
+                            ||((current_unicode_total_bytes >= 3) && (current_unicode_code_point < 0x00800))
+                            ||((current_unicode_total_bytes >= 4) && (current_unicode_code_point < 0x10000))
+                        ) {
+                            tlsm_is_valid = false;
+                            unicode_output.push_back(kUnicodeReplacementCharacter);
+                        } else {
+                            unicode_output.push_back(current_unicode_code_point);
+                        }
+                        current_unicode_code_point = 0;
                     }
                 }
             }
             return unicode_output;
+        }
+
+        static std::vector<UnicodeCodePoint> Decode(const std::string& utf8_string)
+        {
+            return Decode(std::vector<uint8_t>(utf8_string.begin(), utf8_string.end()));
+        }
+
+        static bool IsValidEncoding(const std::string& encoding) 
+        {
+            Decode(encoding);
+            return (tlsm_is_valid && !current_unicode_remaining_bytes);
         }
     };
 }
