@@ -1,8 +1,6 @@
 ﻿#pragma once
 #include <stddef.h>
 #define REPLACEMENT_INVALID_CODE_POINT
-#define UNUSE_CODE_POINT_BEGIN 0xD800
-#define UNUSE_CODE_POINT_END 0xDFFF
 
 namespace GreyDawn
 {
@@ -18,6 +16,8 @@ namespace GreyDawn
         using UnicodeCodePoint = uint32_t;
         inline static const std::array< uint8_t , 3> kUtf8BytesReplacementCharacter = { 0xEF, 0xBF, 0xBD};
         inline static const UnicodeCodePoint kUnicodeReplacementCharacter = 0xFFFD;
+        inline static const UnicodeCodePoint kReserveRangeBegin = 0xD800;
+        inline static const UnicodeCodePoint kReserveRangeEnd = 0xDFFF;
     public:
         static std::vector<UnicodeCodePoint> AsciiToUnicode(const std::string& ascii)
         {
@@ -35,7 +35,7 @@ namespace GreyDawn
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x1F) + 0xC0));
                     utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                 } else if (code_point < 0x10000) {
-                    if ((code_point >= UNUSE_CODE_POINT_BEGIN) && (code_point <= UNUSE_CODE_POINT_END)) { // Unicode在范围D800-DFFF中不存在任何字符
+                    if ((code_point >= kReserveRangeBegin) && (code_point <= kReserveRangeEnd)) { // Unicode在范围D800-DFFF中不存在任何字符
                         utf8_bytes.insert(utf8_bytes.end(), kUtf8BytesReplacementCharacter.begin(), kUtf8BytesReplacementCharacter.end());
                     } else {
                         utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x0F) + 0xE0));
@@ -105,7 +105,7 @@ namespace GreyDawn
                     } else if ((utf8_byte & 0xF8) == 0xF0) {
                         remaining_bytes = 3;
                         unicode_code_point += utf8_byte & 0x7;
-                    } else{
+                    } else {
                         unicode_output.push_back(kUnicodeReplacementCharacter);
                         unicode_code_point = 0;
                     }
@@ -123,7 +123,6 @@ namespace GreyDawn
         }
     };
 }
-
 
 
 #undef REPLACEMENT_INVALID_CODE_POINT
