@@ -163,6 +163,7 @@ namespace GreyDawn
         static bool IsValidEncoding(const std::string& encoding) 
         {
             Decode(encoding);
+            //最后一个字节不完整也是无效
             return (tlsm_is_valid && !current_unicode_remaining_bytes);
         }
     };
