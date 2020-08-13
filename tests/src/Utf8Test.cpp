@@ -53,5 +53,6 @@ TEST(tests, InvalidCodePoint)
     ASSERT_EQ(expected_encoding, Utf8::Encode({ 0xD801 }));
     ASSERT_EQ(expected_encoding, Utf8::Encode({ 0xDFFE }));
     ASSERT_EQ(expected_encoding, Utf8::Encode({ 0x2000000 }));
+    ASSERT_EQ(expected_encoding, Utf8::Encode({ 0xFFFFFFFF }));
 }
 

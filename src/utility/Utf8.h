@@ -15,8 +15,8 @@ namespace GreyDawn
         Utf8& operator=(const Utf8&) = delete;
         Utf8& operator=(Utf8&&) = delete;
     public:
-    using UnicodeCodePoint = uint32_t;
-    inline static const std::array< uint8_t , 3> kUtf8EncodeReplacementCharacter = { 0xEF, 0xBF, 0xBD};
+        using UnicodeCodePoint = uint32_t;
+        inline static const std::array< uint8_t , 3> kUtf8EncodeReplacementCharacter = { 0xEF, 0xBF, 0xBD};
     public:
         static std::vector<UnicodeCodePoint> AsciiToUnicode(const std::string& ascii)
         {
@@ -42,7 +42,7 @@ namespace GreyDawn
                         utf8_bytes.push_back(uint8_t((code_point & 0x3F) + 0x80));
                     }
 #ifdef REPLACEMENT_INVALID_CODE_POINT
-                } else if (code_point < 0x200000) {
+                } else if (code_point < 0x110000 /*&& code_point < 0x2000000*/) { //Unicode目前只使用到了10FFFF
                     utf8_bytes.push_back(uint8_t(((code_point >> 18) & 0x07) + 0xF0));
                     utf8_bytes.push_back(uint8_t(((code_point >> 12) & 0x3F) + 0x80));
                     utf8_bytes.push_back(uint8_t(((code_point >> 6) & 0x3F) + 0x80));
