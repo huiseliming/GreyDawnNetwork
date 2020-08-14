@@ -1,4 +1,4 @@
-#include "utility/DirectoryMonitor.h"
+﻿#include "utility/DirectoryMonitor.h"
 #include <Windows.h>
 #include "utility/SystemAbstraction.h"
 #include "utility/Logger.h"
@@ -51,7 +51,7 @@ namespace GreyDawn
 			if(!ResetEvent(stop_event_))
 				GD_LOG_ERROR("[ResetEvent Error>{}]", TranslateErrorCode(GetLastError()));
 		}
-		notify_function_ = std::move(notify_function_);
+		notify_function_ = std::move(notify_function);
 		change_event_ = FindFirstChangeNotification(
 			path.c_str(),
 			FALSE,

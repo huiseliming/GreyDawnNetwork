@@ -1,4 +1,4 @@
-#include <gtest/gtest.h>
+﻿#include <gtest/gtest.h>
 #include <filesystem>
 #include <condition_variable>
 #include <functional>
@@ -13,6 +13,7 @@ struct ChangedCallbackHelper {
     bool change_detected_ = false;
     std::condition_variable change_condition_;
     std::mutex change_mutex_;
+
     std::function< void() > detected_notify_function_ = [this] {
         std::lock_guard< std::mutex > lock(change_mutex_);
         change_detected_ = true;
@@ -59,7 +60,6 @@ TEST_F(DirectoryMonitorTests, NoCallbackJustAfterStartingMonitor) {
 
 TEST_F(DirectoryMonitorTests, DirectoryMonitoring) {
     ASSERT_TRUE(directory_monitor_.Start(changed_callback_helper_.detected_notify_function_, inner_path_));
-
     // create file
     std::string test_file_path = inner_path_ + "/fred.txt";
     {
@@ -121,7 +121,7 @@ TEST_F(DirectoryMonitorTests, MoveDirectoryMonitor) {
     new_directory_monitor.Stop();
 
     // create file
-    std::string test_file_path = inner_path_ + "/fred.txt";
+    std::string test_file_path = inner_path_ + "/fds.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());

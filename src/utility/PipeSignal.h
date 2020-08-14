@@ -1,4 +1,5 @@
-#pragma once 
+﻿#pragma once 
+#ifdef __linux__
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -116,7 +117,7 @@ private:
     int pipe_[2] = {-1, -1};
 };
 }
-
+#endif
 
 
 
