@@ -10,20 +10,20 @@ namespace GreyDawn
         std::vector< char > original_path(MAX_PATH);
         DWORD length = GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
         if (length == 0) {
-            GD_LOG_ERROR("[GetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
         } else if (length > MAX_PATH) {
             original_path.resize(length);
             DWORD length = GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
         }
         if(!SetCurrentDirectoryA(path.c_str()))
-            GD_LOG_ERROR("[SetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         const auto library = fmt::format("{}/{}.dll", path.c_str(), name.c_str());
         library_handle = LoadLibraryA(library.c_str());
         if (!library_handle)
-            GD_LOG_ERROR("[LoadLibraryA Error>{}]", TranslateErrorCode(GetLastError()));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         if (!SetCurrentDirectoryA(&original_path[0])) {
-            GD_LOG_ERROR("[SetCurrentDirectoryA Error>{}]", TranslateErrorCode(GetLastError()));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         }
         return (library_handle != NULL);
     }
@@ -33,7 +33,7 @@ namespace GreyDawn
         if (library_handle != nullptr) {
             BOOL error_code = FreeLibrary(library_handle);
             if (!error_code)
-                GD_LOG_ERROR("[FreeLibrary Error>{}]", TranslateErrorCode(GetLastError()));
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
             library_handle = nullptr;
         }
     }

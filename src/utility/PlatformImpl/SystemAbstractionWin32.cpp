@@ -54,8 +54,7 @@ namespace GreyDawn
         std::vector<char> current_absolute_path(MAX_PATH);
         DWORD path_length = GetModuleFileNameA(NULL, &current_absolute_path[0], MAX_PATH);
         if (path_length == 0) {
-            DWORD error_code = GetLastError();
-            GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         } else if (path_length >= MAX_PATH) {
             DWORD max_path = MAX_PATH;
             for (size_t i = 0; i < 4; i++)
@@ -64,8 +63,7 @@ namespace GreyDawn
                 current_absolute_path.resize(max_path);
                 path_length = GetModuleFileNameA(NULL, &current_absolute_path[0], MAX_PATH);
                 if (path_length < 0) {
-                    DWORD error_code = GetLastError();
-                    GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 } else if (path_length >= max_path) {
 
                 } else {

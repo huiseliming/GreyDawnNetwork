@@ -35,7 +35,7 @@ namespace GreyDawn
 		Stop();
 		if (stop_event_ != NULL) 
 			if(!CloseHandle(stop_event_))
-				GD_LOG_ERROR("[CloseHandle Error>{}]", TranslateErrorCode(GetLastError()));
+				GD_LOG_OUTPUT_SYSTEM_ERROR();
 	}
 
 	bool DirectoryMonitor::Start(std::function<void()> notify_function, const std::string& path)
@@ -49,7 +49,7 @@ namespace GreyDawn
 		}
 		else {
 			if(!ResetEvent(stop_event_))
-				GD_LOG_ERROR("[ResetEvent Error>{}]", TranslateErrorCode(GetLastError()));
+				GD_LOG_OUTPUT_SYSTEM_ERROR();
 		}
 		notify_function_ = std::move(notify_function);
 		change_event_ = FindFirstChangeNotification(
@@ -72,10 +72,10 @@ namespace GreyDawn
 			return;
 		}
 		if (!SetEvent(stop_event_))
-			GD_LOG_ERROR("[SetEvent Error>{}]", TranslateErrorCode(GetLastError()));
+			GD_LOG_OUTPUT_SYSTEM_ERROR();
 		worker_.join();
 		if(!FindCloseChangeNotification(change_event_))
-			GD_LOG_ERROR("[FindCloseChangeNotification Error>{}]", TranslateErrorCode(GetLastError()));
+			GD_LOG_OUTPUT_SYSTEM_ERROR();
 	}
 
 	void DirectoryMonitor::Run()
@@ -84,7 +84,7 @@ namespace GreyDawn
 			HANDLE event_handles[2] = { stop_event_, change_event_ };
 			while (WaitForMultipleObjects(2, event_handles, FALSE, INFINITE) != 0) {
 				if (FindNextChangeNotification(change_event_) == FALSE) {
-					GD_LOG_ERROR("[FindNextChangeNotification Error>{}]", TranslateErrorCode(GetLastError()));
+					GD_LOG_OUTPUT_SYSTEM_ERROR();
 					break;
 				}
 				notify_function_();
