@@ -53,13 +53,15 @@ namespace GreyDawn
         }
         int flags = fcntl(notify_queue_, F_GETFL, 0);
         if (flags < 0) {
-            (void)close(notify_queue_);
+            if(close(notify_queue_) < 0)
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
             notify_queue_ = -1;
             return false;
         }
         flags |= O_NONBLOCK;
         if (fcntl(notify_queue_, F_SETFL, flags) < 0) {
-            (void)close(notify_queue_);
+            if(close(notify_queue_) < 0)
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
             notify_queue_ = -1;
             return false;
         }
@@ -69,7 +71,8 @@ namespace GreyDawn
             IN_CREATE | IN_DELETE | IN_MODIFY | IN_MOVED_FROM | IN_MOVED_TO
         );
         if (notify_watch_ < 0) {
-            (void)close(notify_queue_);
+            if(close(notify_queue_) < 0)
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
             notify_queue_ = -1;
             return false;
         }

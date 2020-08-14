@@ -61,7 +61,7 @@ TEST_F(DirectoryMonitorTests, NoCallbackJustAfterStartingMonitor) {
 TEST_F(DirectoryMonitorTests, DirectoryMonitoring) {
     ASSERT_TRUE(directory_monitor_.Start(changed_callback_helper_.detected_notify_function_, inner_path_));
     // create file
-    std::string test_file_path = inner_path_ + "/fred.txt";
+    std::string test_file_path = inner_path_ + "/DirectoryMonitoring.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
@@ -86,7 +86,7 @@ TEST_F(DirectoryMonitorTests, DirectoryMonitoring) {
     }
 
     // create file outside the monitored area.
-    test_file_path = outer_path_ + "/fred.txt";
+    test_file_path = outer_path_ + "/DirectoryMonitoring.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
@@ -121,7 +121,7 @@ TEST_F(DirectoryMonitorTests, MoveDirectoryMonitor) {
     new_directory_monitor.Stop();
 
     // create file
-    std::string test_file_path = inner_path_ + "/fds.txt";
+    std::string test_file_path = inner_path_ + "/MoveDirectoryMonitor.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
@@ -146,7 +146,7 @@ TEST_F(DirectoryMonitorTests, MoveDirectoryMonitor) {
     }
 
     // create file outside the monitored area.
-    test_file_path = outer_path_ + "/fred.txt";
+    test_file_path = outer_path_ + "/MoveDirectoryMonitor.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
@@ -175,7 +175,7 @@ TEST_F(DirectoryMonitorTests, Stop) {
     ASSERT_TRUE(directory_monitor_.Start(changed_callback_helper_.detected_notify_function_, inner_path_));
 
     // create file
-    std::string test_file_path = inner_path_ + "/fred.txt";
+    std::string test_file_path = inner_path_ + "/Stop.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
@@ -205,7 +205,7 @@ TEST_F(DirectoryMonitorTests, Stop) {
 
 TEST_F(DirectoryMonitorTests, ChangeFileThatExistedBeforeMonitoringBegan) {
     // create file
-    std::string test_file_path = inner_path_ + "/fred.txt";
+    std::string test_file_path = inner_path_ + "/ChangeFileThatExistedBeforeMonitoringBegan.txt";
     {
         std::fstream file(test_file_path, std::ios_base::out | std::ios_base::ate);
         ASSERT_FALSE(file.fail());
