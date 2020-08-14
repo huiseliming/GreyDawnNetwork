@@ -75,7 +75,7 @@ if (UNIX)
     SetPlatformImplSourceFiles("${SourceFiles}" "Linux")
 endif()
 
-add_library(${This} STATIC ${SourceFiles} "src/utility/Utf8.cpp" "src/utility/PlatformImpl/DirectoryMonitorLinux.cpp" "src/utility/PlatformImpl/DirectoryMonitorWin32.cpp")
+add_library(${This} STATIC ${SourceFiles})
 
 target_include_directories(${This} PUBLIC include)
 target_include_directories(${This} PRIVATE src)

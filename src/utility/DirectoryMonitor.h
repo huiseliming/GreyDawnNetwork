@@ -6,6 +6,8 @@
 #include <thread>
 #ifdef _WIN32
 #include <Windows.h>
+#elif __linux__
+#include "PipeSignal.h"
 #endif
 
 
@@ -31,6 +33,12 @@ namespace GreyDawn
 #ifdef _WIN32
         HANDLE change_event_ = INVALID_HANDLE_VALUE;
         HANDLE stop_event_ = NULL;
+#elif __linux__
+    int notify_queue_ = -1;
+    int notify_watch_ = -1;
+    PipeSignal stop_signal_;
+#else
+#error "Unknow System"
 #endif
 
 	};

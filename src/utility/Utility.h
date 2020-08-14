@@ -11,6 +11,7 @@
 #include "SystemAbstraction.h"
 #include "Subprocess.h"
 #include "DirectoryMonitor.h"
+#include "PipeSignal.h"
 
 namespace GreyDawn
 {
