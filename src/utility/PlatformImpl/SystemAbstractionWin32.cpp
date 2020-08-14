@@ -18,8 +18,7 @@ namespace GreyDawn
         //长度小于0说明未获取到格式化的错误
         if (message_len <= 0) {
             error_message = "Unidentified error code";
-        }
-        else {
+        } else {
             //拷贝字符串
             error_message = message_buffer;
             //这个字符串是Windows的系统内存，归还系统
@@ -57,8 +56,7 @@ namespace GreyDawn
         if (path_length == 0) {
             DWORD error_code = GetLastError();
             GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
-        }
-        else if (path_length >= MAX_PATH) {
+        } else if (path_length >= MAX_PATH) {
             DWORD max_path = MAX_PATH;
             for (size_t i = 0; i < 4; i++)
             {
@@ -68,19 +66,16 @@ namespace GreyDawn
                 if (path_length < 0) {
                     DWORD error_code = GetLastError();
                     GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
-                }
-                else if (path_length >= max_path) {
+                } else if (path_length >= max_path) {
 
-                }
-                else {
+                } else {
                     current_absolute_path[path_length] = '\0';
                     absolute_path = &current_absolute_path[0];
                     return absolute_path;
                 }
             }
             GD_LOG_ERROR("[path length exceeds {:d}]", max_path);
-        }
-        else {
+        } else {
             current_absolute_path[path_length] = '\0';
             absolute_path = &current_absolute_path[0];
             return absolute_path;

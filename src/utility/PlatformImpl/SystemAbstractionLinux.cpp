@@ -36,8 +36,7 @@ namespace GreyDawn
         int cnt = readlink("/proc/self/exe", &current_absolute_path[0], PATH_MAX);
         if (cnt < 0) {
             GD_LOG_ERROR("[readlink errno>{:d} | strerror>{}]", errno, strerror(errno));
-        }
-        else if (cnt >= PATH_MAX) {
+        } else if (cnt >= PATH_MAX) {
             int max_path = PATH_MAX;
             for (size_t i = 0; i < 4; i++)
             {
@@ -46,29 +45,22 @@ namespace GreyDawn
                 cnt = readlink("/proc/self/exe", &current_absolute_path[0], max_path);
                 if (cnt < 0) {
                     GD_LOG_ERROR("[readlink errno>{:d} | strerror>{}]", errno, strerror(errno));
-                }
-                else if (cnt >= max_path) {
+                } else if (cnt >= max_path) {
 
-                }
-                else {
+                } else {
                     current_absolute_path[cnt] = '\0';
                     absolute_path = &current_absolute_path[0];
                     return absolute_path;
                 }
             }
             GD_LOG_ERROR("[path length exceeds {:d}]", max_path);
-        }
-        else {
+        } else {
             current_absolute_path[cnt] = '\0';
             absolute_path = &current_absolute_path[0];
             return absolute_path;
         }
         return absolute_path;
     }
-    //const char*  TranslateErrorCode(uint32_t error_code)
-    //{
-    //    return strerror(error_code);
-    //}
 }
 
 
