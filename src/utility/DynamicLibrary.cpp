@@ -19,8 +19,11 @@ namespace GreyDawn
     }
     DynamicLibrary& DynamicLibrary::operator=(DynamicLibrary&& dynamic_library)
     {
-        this->library_handle = dynamic_library.library_handle;
-        dynamic_library.library_handle = nullptr;
+        if (this != std::addressof(dynamic_library))
+        {
+            this->library_handle = dynamic_library.library_handle;
+            dynamic_library.library_handle = nullptr;
+        }
         return *this;
     }
 }

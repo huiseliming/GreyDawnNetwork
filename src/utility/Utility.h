@@ -10,6 +10,7 @@
 #include "DynamicLibrary.h"
 #include "SystemAbstraction.h"
 #include "Subprocess.h"
+#include "DirectoryMonitor.h"
 
 namespace GreyDawn
 {
