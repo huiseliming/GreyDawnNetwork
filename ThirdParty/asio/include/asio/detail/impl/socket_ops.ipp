@@ -2462,7 +2462,10 @@ inline hostent* gethostbyaddr(const char* addr, int length, int af,
 #if defined(ASIO_WINDOWS) || defined(__CYGWIN__)
   (void)(buffer);
   (void)(buflength);
+#pragma warning(push)
+#pragma warning(disable: 4996)
   hostent* retval = error_wrapper(::gethostbyaddr(addr, length, af), ec);
+#pragma warning(pop)
   if (!retval)
     return 0;
   ec = asio::error_code();
@@ -2511,7 +2514,10 @@ inline hostent* gethostbyname(const char* name, int af, struct hostent* result,
     ec = asio::error::address_family_not_supported;
     return 0;
   }
+#pragma warning(push)
+#pragma warning(disable: 4996)
   hostent* retval = error_wrapper(::gethostbyname(name), ec);
+#pragma warning(pop)
   if (!retval)
     return 0;
   ec = asio::error_code();

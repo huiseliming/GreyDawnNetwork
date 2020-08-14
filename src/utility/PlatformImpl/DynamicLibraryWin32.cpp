@@ -6,7 +6,7 @@ namespace GreyDawn
     bool DynamicLibrary::Load(const std::string& path, const std::string& name)
     {
         Unload();
-        //保存当前路径，设置当前路径到动态库路径，防止动态库加载依赖文件所在路径
+        //保存当前路径,设置当前路径到动态库路径,防止动态库加载依赖文件路径
         std::vector< char > original_path(MAX_PATH);
         DWORD length = GetCurrentDirectoryA((DWORD)original_path.size(), &original_path[0]);
         if (length == 0) {
@@ -43,26 +43,3 @@ namespace GreyDawn
         return GetProcAddress(library_handle, name.c_str());
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -1,4 +1,4 @@
-#include "utility/SystemAbstraction.h"
+﻿#include "utility/SystemAbstraction.h"
 #include <vector>
 #include "utility/Logger.h"
 
@@ -14,11 +14,12 @@ namespace GreyDawn
             FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
             nullptr, error_code, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
             reinterpret_cast<LPSTR>(&message_buffer), 0, nullptr
-            );
+        );
         //长度小于0说明未获取到格式化的错误
         if (message_len <= 0) {
             error_message = "Unidentified error code";
-        } else {
+        }
+        else {
             //拷贝字符串
             error_message = message_buffer;
             //这个字符串是Windows的系统内存，归还系统
@@ -58,7 +59,7 @@ namespace GreyDawn
             GD_LOG_ERROR("[GetModuleFileNameA ErrorCode>{:d} | ErrorFormat>{}]", error_code, TranslateErrorCode(error_code));
         }
         else if (path_length >= MAX_PATH) {
-            int max_path = MAX_PATH;
+            DWORD max_path = MAX_PATH;
             for (size_t i = 0; i < 4; i++)
             {
                 max_path = max_path * 2;
@@ -87,26 +88,3 @@ namespace GreyDawn
         return absolute_path;
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

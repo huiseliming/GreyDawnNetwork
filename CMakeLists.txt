@@ -35,6 +35,7 @@ if (MSVC)
         -D_CRT_SECURE_NO_WARNINGS 
         -D_SCL_SECURE_NO_WARNINGS
         -D_SILENCE_ALL_CXX17_DEPRECATION_WARNINGS
+        -D_WIN32_WINDOWS
     )
     #使用Windows共享库,添加这个设置不用使用"__declspec(dllimport)"去导出符号
     set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)

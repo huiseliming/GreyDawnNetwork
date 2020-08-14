@@ -1,4 +1,6 @@
-﻿#include <gtest/gtest.h>
+﻿#pragma warning(push)
+#pragma warning(disable: 4566)
+#include <gtest/gtest.h>
 #include <utility/Utility.h>
 #include <filesystem>
 #include <vector>
@@ -10,7 +12,7 @@ using namespace GreyDawn;
 TEST(tests, AsciiToUnicode)
 {
     const std::vector<uint32_t> expected_encoding{ 0x48, 0x65 , 0x6C, 0x6C , 0x6F };
-    const auto actual_encoding = Utf8::AsciiToUnicode("Hello");
+    const auto actual_encoding = Utf8::AsciiToUnicode(u8"Hello");
     ASSERT_EQ(expected_encoding,actual_encoding);
 }
 
@@ -18,7 +20,7 @@ TEST(tests, AsciiToUnicode)
 TEST(tests, EncodeAscii)
 {
     const std::vector<uint8_t> expected_encoding{ 0x48, 0x65 , 0x6C, 0x6C , 0x6F };
-    const auto actual_encoding = Utf8::Encode(Utf8::AsciiToUnicode("Hello"));
+    const auto actual_encoding = Utf8::Encode(Utf8::AsciiToUnicode(u8"Hello"));
     ASSERT_EQ(expected_encoding, actual_encoding);
 }
 
@@ -87,17 +89,17 @@ TEST(tests,DecodeValidSequences)
 
 TEST(tests,DecodeFromInputVector) 
 {
-    const auto actual_encoding = Utf8::Decode(std::vector<uint8_t>{0xE6, 0x97, 0xA5, 0xE6, 0X9C, 0xAC, 0xE8, 0xAA, 0x9E});
+    //日本語
+    const auto actual_encoding = Utf8::Decode(std::vector<uint8_t>{0xE6, 0x97, 0xA5, 0xE6, 0x9C, 0xAC, 0xE8, 0xAA, 0x9E});
     ASSERT_EQ((std::vector<Utf8::UnicodeCodePoint>{0x65E5, 0x672C, 0x8A9E}), actual_encoding);
 }
 
 TEST(tests, UnexpectedContinuationBytes)
 {
-    //                                    0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x91, 0x2E
     ASSERT_EQ(
         (std::vector<Utf8::UnicodeCodePoint>{ 0x0041, 0x2262, 0xFFFD, 0x002E}), 
         Utf8::Decode(std::vector<uint8_t>{0x41, 0xE2, 0x89, 0xA2, 0x91, 0x2E})
-        );
+        ); //                             0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x91, 0x2E
 }
 
 TEST(tests, DecodeBreakInSequence)
@@ -105,7 +107,7 @@ TEST(tests, DecodeBreakInSequence)
     ASSERT_EQ(
     (std::vector<Utf8::UnicodeCodePoint>{ 0x0041, 0x2262, 0xFFFD, 0x002E}),
         Utf8::Decode(std::vector<uint8_t>{0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x2E})
-        );
+        ); //                             0x41, 0xE2, 0x89, 0xA2, 0xCE, 0x91, 0x2E
 }
 
 TEST(tests, RejectOverlongSequences) {
@@ -131,13 +133,18 @@ TEST(tests, RejectOverlongSequences) {
     }
 }
 
+
 TEST(tests, IsValidEncoding) {
     EXPECT_TRUE(Utf8::IsValidEncoding(u8"abc"));
     EXPECT_TRUE(Utf8::IsValidEncoding(u8"𣎴"));
     EXPECT_TRUE(Utf8::IsValidEncoding(u8"A≢�"));
-    EXPECT_FALSE(Utf8::IsValidEncoding("\x41\xE2\x89\xA2\xCE\x2E"));
-    EXPECT_FALSE(Utf8::IsValidEncoding("\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA"));
-    EXPECT_FALSE(Utf8::IsValidEncoding("\xAA"));
-    EXPECT_TRUE(Utf8::IsValidEncoding("A≢"));
+    EXPECT_FALSE(Utf8::IsValidEncoding("\x41\xE2\x89\xA2\xCE\x2E"));//A≢\xCE\x2E
+    EXPECT_FALSE(Utf8::IsValidEncoding("\xE6\x97\xA5\xE6\x9C\xAC\xE8\xAA"));//日本\xE8\xAA
+    EXPECT_FALSE(Utf8::IsValidEncoding("\xAA"));//\xAA
+    EXPECT_TRUE(Utf8::IsValidEncoding(u8"A≢"));
     EXPECT_TRUE(Utf8::IsValidEncoding(u8"�"));
 }
+
+
+
+#pragma warning(pop)
