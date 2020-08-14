@@ -34,12 +34,12 @@ public:
     }
     ~PipeSignal()
     {
-        if (pipe_[1] >= 0) {
-            (void)close(pipe_[1]);
-        }
-        if (pipe_[0] >= 0) {
-            (void)close(pipe_[0]);
-        }
+        if (pipe_[1] >= 0) 
+            if(close(pipe_[1]) < 0)
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
+        if (pipe_[0] >= 0) 
+            if(close(pipe_[0]) < 0)
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
     }
     bool Initialize()
     {
@@ -47,7 +47,7 @@ public:
             return true;
         }
         if (::pipe(pipe_) != 0) {
-            GD_LOG_ERROR("[pipe errno>{:d} | strerror>{}]", errno, strerror(errno));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
             pipe_[0] = -1;
             pipe_[1] = -1;
             return false;
@@ -55,22 +55,22 @@ public:
         for (int i = 0; i < 2; ++i) {
             int flags = fcntl(pipe_[i], F_GETFL, 0);
             if (flags < 0) {
-                GD_LOG_ERROR("[fcntl errno>{:d} | strerror>{}]", errno, strerror(errno));
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(close(pipe_[0]) < 0)
-                    GD_LOG_ERROR("[close errno>{:d} | strerror>{}]", errno, strerror(errno));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(close(pipe_[1]) < 0)
-                    GD_LOG_ERROR("[close errno>{:d} | strerror>{}]", errno, strerror(errno));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 pipe_[0] = -1;
                 pipe_[1] = -1;
                 return false;
             }
             flags |= O_NONBLOCK;
             if (fcntl(pipe_[i], F_SETFL, flags) < 0) {
-                GD_LOG_ERROR("[fcntl errno>{:d} | strerror>{}]", errno, strerror(errno));
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(close(pipe_[0]) < 0)
-                    GD_LOG_ERROR("[close errno>{:d} | strerror>{}]", errno, strerror(errno));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(close(pipe_[1]) < 0)
-                    GD_LOG_ERROR("[close errno>{:d} | strerror>{}]", errno, strerror(errno));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 pipe_[0] = -1;
                 pipe_[1] = -1;
                 return false;
@@ -83,7 +83,7 @@ public:
     {
         uint8_t token = '.';
         if(write(pipe_[1], &token, 1) < -1 ){
-            GD_LOG_ERROR("[write errno>{:d} | strerror>{}]", errno, strerror(errno));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
         }
         return true;
@@ -93,7 +93,7 @@ public:
     {
         uint8_t token;
         if(read(pipe_[0], &token, 1) < -1){
-            GD_LOG_ERROR("[write errno>{:d} | strerror>{}]", errno, strerror(errno));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
         }
         return true;

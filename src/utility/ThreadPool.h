@@ -145,7 +145,14 @@ namespace GreyDawn
                             task = std::move(this->tasks_.front());
                             this->tasks_.pop();
                         }
-                        task();
+                        try
+                        {
+                            task();
+                        }catch(const std::exception& e){
+                            GD_LOG_ERROR("[std::exception>{}]", e.what());
+                        }catch(...){
+                            GD_LOG_ERROR("Unknow Exception");
+                        }
                     }
                 });
             }

@@ -35,7 +35,7 @@ namespace GreyDawn
         std::vector<char> current_absolute_path(PATH_MAX);
         int cnt = readlink("/proc/self/exe", &current_absolute_path[0], PATH_MAX);
         if (cnt < 0) {
-            GD_LOG_ERROR("[readlink errno>{:d} | strerror>{}]", errno, strerror(errno));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         } else if (cnt >= PATH_MAX) {
             int max_path = PATH_MAX;
             for (size_t i = 0; i < 4; i++)
@@ -44,7 +44,7 @@ namespace GreyDawn
                 current_absolute_path.resize(max_path);
                 cnt = readlink("/proc/self/exe", &current_absolute_path[0], max_path);
                 if (cnt < 0) {
-                    GD_LOG_ERROR("[readlink errno>{:d} | strerror>{}]", errno, strerror(errno));
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
                 } else if (cnt >= max_path) {
 
                 } else {

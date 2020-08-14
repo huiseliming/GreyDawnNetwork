@@ -86,12 +86,13 @@ namespace GreyDawn
         worker_.join();
         notify_watch_ = -1;
         if(close(notify_queue_) < 0)
-            GD_LOG_ERROR("[close errno>{:d} | strerror>{}]", errno, strerror(errno));
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         notify_queue_ = -1;
     }
 
 	void DirectoryMonitor::Run()
 	{
+        try{
             const int stop_select_handle = (stop_signal_.pipe())[0];
             const int nfds = std::max(stop_select_handle, notify_queue_) + 1;
             fd_set readfds;
@@ -110,8 +111,12 @@ namespace GreyDawn
                     notify_function_();
                 }
             }
+        }catch(const std::exception& e){
+            GD_LOG_ERROR("[std::exception>{}]", e.what());
+        }catch(...){
+            GD_LOG_ERROR("Unknow Exception");
+        }
 	}
-
 }
 
 

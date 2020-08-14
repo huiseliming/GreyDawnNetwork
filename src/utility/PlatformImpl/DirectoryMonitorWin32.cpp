@@ -80,14 +80,20 @@ namespace GreyDawn
 
 	void DirectoryMonitor::Run()
 	{
-		HANDLE event_handles[2] = { stop_event_, change_event_ };
-		while (WaitForMultipleObjects(2, event_handles, FALSE, INFINITE) != 0) {
-			if (FindNextChangeNotification(change_event_) == FALSE) {
-				GD_LOG_ERROR("[FindNextChangeNotification Error>{}]", TranslateErrorCode(GetLastError()));
-				break;
+		try{
+			HANDLE event_handles[2] = { stop_event_, change_event_ };
+			while (WaitForMultipleObjects(2, event_handles, FALSE, INFINITE) != 0) {
+				if (FindNextChangeNotification(change_event_) == FALSE) {
+					GD_LOG_ERROR("[FindNextChangeNotification Error>{}]", TranslateErrorCode(GetLastError()));
+					break;
+				}
+				notify_function_();
 			}
-			notify_function_();
-		}
+		}catch(const std::exception& e){
+            GD_LOG_ERROR("[std::exception>{}]", e.what());
+        }catch(...){
+            GD_LOG_ERROR("Unknow Exception");
+        }
 	}
 
 }
