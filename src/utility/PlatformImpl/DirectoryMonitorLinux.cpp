@@ -46,7 +46,7 @@ namespace GreyDawn
             return false;
         }
         stop_signal_.Clear();
-        notify_function_ = notify_function;
+        notify_function_ = std::move(notify_function);
         notify_queue_ = inotify_init();
         if (notify_queue_ < 0) {
             return false;

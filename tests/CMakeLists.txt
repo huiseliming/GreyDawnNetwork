@@ -7,7 +7,7 @@ add_executable(${This}
     ${TestSourceFiles} 
     )
 
-target_include_directories(${This} PRIVATE ..)
+#target_include_directories(${This} PRIVATE ..)
 target_include_directories(${This} PRIVATE ../src)
 
 target_link_libraries(${This} PUBLIC

@@ -31,7 +31,15 @@ public:
         }
         return *this;
     }
-    ~PipeSignal();
+    ~PipeSignal()
+    {
+        if (pipe_[1] >= 0) {
+            (void)close(pipe_[1]);
+        }
+        if (pipe_[0] >= 0) {
+            (void)close(pipe_[0]);
+        }
+    }
     bool Initialize()
     {
         if (pipe_[0] >= 0) {
