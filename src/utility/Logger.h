@@ -1,5 +1,6 @@
 #pragma once
 #include <spdlog/spdlog.h>
+#include "SystemAbstraction.h"
 
 #define STRINGIFY(x) #x
 #define STRINGIFY_BUILTIN(x) STRINGIFY(x)
