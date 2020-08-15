@@ -1,10 +1,6 @@
 ﻿#pragma once
 #ifdef _WIN32
 #include <Windows.h>
-#elif __linux__
-
-#else
-
 #endif 
 
 #include <memory>
@@ -70,10 +66,6 @@ namespace GreyDawn
 #ifdef _WIN32
         SERVICE_STATUS_HANDLE service_status_handle_;
         SERVICE_STATUS service_status_;
-#elif __linux__
-
-#else
-
 #endif 
     };
 
