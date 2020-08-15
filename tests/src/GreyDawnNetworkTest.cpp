@@ -43,10 +43,12 @@ TEST(tests, DynamicLibraryTest)
 {
 	DynamicLibrary sum_dynamic_library;
 	ASSERT_TRUE(sum_dynamic_library.Load(GetExecuteFileDirectoryAbsolutePath(),"SumDynamicLibrary"));
-	int (*fpSum)(int,int) = (int(*)(int,int))sum_dynamic_library.GetProcedure("Sum");
+	int (*procedure)(int,int) = (int(*)(int,int))sum_dynamic_library.GetProcedure("Sum");
 	int x = 3, y = 8;
-	ASSERT_TRUE(fpSum != nullptr);
-	ASSERT_TRUE(fpSum(3,8) == 11);
+	ASSERT_TRUE(procedure != nullptr);
+	ASSERT_TRUE(procedure(3,8) == 11);
+	sum_dynamic_library.Unload();
+	ASSERT_DEATH(procedure(3,8),"");
 	//DynamicLibrary unknow_dynamic_library;
 	//ASSERT_FALSE(sum_dynamic_library.Load(GetExecuteFileDirectoryAbsolutePath(),"UnknowDynamicLibrary"));
 }

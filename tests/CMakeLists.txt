@@ -5,7 +5,7 @@ FILE(GLOB_RECURSE TestSourceFiles  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp) #ï¿½ï¿
 
 add_executable(${This}
     ${TestSourceFiles} 
-    )
+     "src/SubprocessTest.cpp")
 
 #target_include_directories(${This} PRIVATE ..)
 target_include_directories(${This} PRIVATE ../src)
