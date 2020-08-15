@@ -21,6 +21,36 @@ namespace GreyDawn{
             GD_LOG_OUTPUT_SYSTEM_ERROR();
     }
 
+    bool Service::Install()
+    {
+        auto sc_manager_handle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+        if(sc_manager_handle == NULL) {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            return false;
+        }
+        auto service_handle = CreateService(sc_manager_handle,
+            GetServiceName().c_str(),
+            GetServiceName().c_str(),
+            SERVICE_ALL_ACCESS,
+            SERVICE_WIN32_OWN_PROCESS,
+            SERVICE_DEMAND_START,
+            SERVICE_ERROR_NORMAL,
+            GetExecuteFileAbsolutePath().c_str(),
+            NULL, 
+            NULL, 
+            NULL,
+            NULL, 
+            NULL);
+        if(service_handle == NULL) {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            CloseServiceHandle(sc_manager_handle);
+            return false;
+        }
+        GD_LOG_INFO("Service {} installed successfully", GetServiceName());
+        CloseServiceHandle(sc_manager_handle);
+        CloseServiceHandle(service_handle);
+    }
+
     int Service::Start() {
         auto name = Singleton<Service>::Instance().GetServiceName();
         SERVICE_TABLE_ENTRYA dispatchTable[] = {
@@ -36,25 +66,20 @@ namespace GreyDawn{
     }
 
     //Window Callback
-    VOID WINAPI Service::ServiceMain(DWORD dwArgc, LPSTR* lpszArgv) {
+    VOID WINAPI Service::ServiceMain(DWORD dwArgc, LPSTR* lpszArgv) 
+    {
         Singleton<Service>::Instance().Main();
     }
 
-    DWORD WINAPI Service::ServiceControlHandler(
-        DWORD dwControl,
-        DWORD dwEventType,
-        LPVOID lpEventData,
-        LPVOID lpContext
-    ) {
+    VOID WINAPI Service::ServiceControlHandler(DWORD dwControl) 
+    {
         switch (dwControl)
         {
         case SERVICE_CONTROL_STOP: 
             Singleton<Service>::Instance().Stop();
-            return NO_ERROR;
-        case SERVICE_CONTROL_INTERROGATE: 
-            return NO_ERROR;
-        default: 
-            return ERROR_CALL_NOT_IMPLEMENTED;
+            break;
+        default:
+            break;
         }
     }
     void Service::ReportServiceStatus() {
@@ -62,11 +87,15 @@ namespace GreyDawn{
     }
 
     int Service::Main() {
-        serviceStatusHandle = RegisterServiceCtrlHandlerExA(
+        serviceStatusHandle = RegisterServiceCtrlHandler(
             Singleton<Service>::Instance().GetServiceName().c_str(),
-            ServiceControlHandler,
-            NULL
-        );
+            Service::ServiceControlHandler);
+        if (!serviceStatusHandle)
+        {
+            return EXIT_FAILURE;
+        }
+        serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+        serviceStatus.dwServiceSpecificExitCode = 0;
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
         ReportServiceStatus();
         const auto runResult = Singleton<Service>::Instance().Run();

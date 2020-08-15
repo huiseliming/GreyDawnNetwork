@@ -23,7 +23,12 @@ namespace GreyDawn
         Service& operator=(Service&&) = default;
 
         /*
-         * start and run the service
+         * install the service 
+         */
+        bool Install();
+
+        /*
+         * run the service
          */
         int Start();
 
@@ -45,7 +50,7 @@ namespace GreyDawn
     protected:
         static VOID WINAPI ServiceMain(DWORD dwArgc, LPSTR* lpszArgv);
 
-        static DWORD WINAPI ServiceControlHandler(DWORD dwControl, DWORD dwEventType, LPVOID lpEventData, LPVOID lpContext);
+        static VOID WINAPI ServiceControlHandler(DWORD dwControl);
 
         void Service::ReportServiceStatus();
 
