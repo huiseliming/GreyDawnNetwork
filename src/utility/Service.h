@@ -68,8 +68,8 @@ namespace GreyDawn
 
     private:
 #ifdef _WIN32
-        SERVICE_STATUS_HANDLE serviceStatusHandle;
-        SERVICE_STATUS serviceStatus;
+        SERVICE_STATUS_HANDLE service_status_handle_;
+        SERVICE_STATUS service_status_;
 #elif __linux__
 
 #else

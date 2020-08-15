@@ -8,13 +8,13 @@ namespace GreyDawn{
     Service::Service()
     {
         stop_event_ = CreateEvent(NULL, TRUE, FALSE, NULL);
-        (void)memset(&serviceStatus, 0, sizeof(serviceStatus));
-        serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-        serviceStatus.dwCurrentState = SERVICE_STOPPED;
-        serviceStatus.dwControlsAccepted = (
+        (void)memset(&service_status_, 0, sizeof(service_status_));
+        service_status_.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+        service_status_.dwCurrentState = SERVICE_STOPPED;
+        service_status_.dwControlsAccepted = (
             SERVICE_ACCEPT_STOP
             );
-        serviceStatus.dwWin32ExitCode = NO_ERROR;
+        service_status_.dwWin32ExitCode = NO_ERROR;
     }
 
     Service::~Service()
@@ -49,6 +49,7 @@ namespace GreyDawn{
                 throw std::exception("Win32 API CreateServiceA return NULL");
             GD_LOG_INFO("Service {} installed successfully", GetServiceName().c_str());
         } catch (const std::exception& e) {
+            GD_LOG_ERROR("[std::exception>{}]", e.what());
             GD_LOG_OUTPUT_SYSTEM_ERROR();
             if (sc_manager_handle)
                 if (!CloseServiceHandle(sc_manager_handle))
@@ -72,13 +73,13 @@ namespace GreyDawn{
         try{
             sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
             if (sc_manager_handle == NULL) 
-                throw std::exception("Win32 API OpenSCManagerA Failed");
+                throw std::exception("Win32 API OpenSCManagerA return NULL");
 
             service_handle = OpenServiceA(sc_manager_handle,
                 GetServiceName().c_str(),
                 SERVICE_ALL_ACCESS);
             if (service_handle == NULL) 
-                throw std::exception("Win32 API OpenServiceA Failed");
+                throw std::exception("Win32 API OpenServiceA return NULL");
 
             SERVICE_STATUS service_status;
             if(QueryServiceStatus(service_handle, &service_status)== 0) 
@@ -98,7 +99,8 @@ namespace GreyDawn{
             if(DeleteService(service_handle) == 0)
                 throw std::exception("Win32 API DeleteService Failed");
             GD_LOG_INFO("Service {} uninstalled successfully", GetServiceName().c_str());
-        } catch (const std::exception&) {
+        } catch (const std::exception& e) {
+            GD_LOG_ERROR("[std::exception>{}]", e.what());
             GD_LOG_OUTPUT_SYSTEM_ERROR();
             if (sc_manager_handle)
                 if (!CloseServiceHandle(sc_manager_handle))
@@ -119,11 +121,11 @@ namespace GreyDawn{
         assert(Service::Instance == nullptr && "Start call only once");
         Service::Instance = this;
         auto name = Service::Instance->GetServiceName();
-        SERVICE_TABLE_ENTRYA dispatchTable[] = {
+        SERVICE_TABLE_ENTRYA dispatch_table[] = {
             {(LPSTR)name.data(), (LPSERVICE_MAIN_FUNCTION)Service::ServiceMain},
             {NULL, NULL}
         };
-        if (StartServiceCtrlDispatcherA(dispatchTable)) {
+        if (StartServiceCtrlDispatcherA(dispatch_table)) {
             return EXIT_SUCCESS;
         } else {
             GD_LOG_OUTPUT_SYSTEM_ERROR();
@@ -150,29 +152,29 @@ namespace GreyDawn{
     }
 
     void Service::ReportServiceStatus() {
-        (void)SetServiceStatus(serviceStatusHandle, &serviceStatus);
+        (void)SetServiceStatus(service_status_handle_, &service_status_);
     }
 
     int Service::Main() {
-        serviceStatusHandle = RegisterServiceCtrlHandler(
+        service_status_handle_ = RegisterServiceCtrlHandler(
             Service::Instance->GetServiceName().c_str(),
             Service::ServiceControlHandler);
-        if (!serviceStatusHandle)
+        if (!service_status_handle_)
         {
             return EXIT_FAILURE;
         }
-        serviceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-        serviceStatus.dwServiceSpecificExitCode = 0;
-        serviceStatus.dwCurrentState = SERVICE_RUNNING;
+        service_status_.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
+        service_status_.dwServiceSpecificExitCode = 0;
+        service_status_.dwCurrentState = SERVICE_RUNNING;
         ReportServiceStatus();
         const auto runResult = Service::Instance->Run();
         if (runResult == 0) {
-            serviceStatus.dwWin32ExitCode = NO_ERROR;
+            service_status_.dwWin32ExitCode = NO_ERROR;
         } else {
-            serviceStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
-            serviceStatus.dwServiceSpecificExitCode = (DWORD)runResult;
+            service_status_.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
+            service_status_.dwServiceSpecificExitCode = (DWORD)runResult;
         }
-        serviceStatus.dwCurrentState = SERVICE_STOPPED;
+        service_status_.dwCurrentState = SERVICE_STOPPED;
         ReportServiceStatus();
         return runResult;
     }
