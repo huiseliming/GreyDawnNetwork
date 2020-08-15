@@ -23,12 +23,12 @@ namespace GreyDawn{
 
     bool Service::Install()
     {
-        auto sc_manager_handle = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+        auto sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
         if(sc_manager_handle == NULL) {
             GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
         }
-        auto service_handle = CreateService(sc_manager_handle,
+        auto service_handle = CreateServiceA(sc_manager_handle,
             GetServiceName().c_str(),
             GetServiceName().c_str(),
             SERVICE_ALL_ACCESS,
@@ -49,6 +49,69 @@ namespace GreyDawn{
         GD_LOG_INFO("Service {} installed successfully", GetServiceName());
         CloseServiceHandle(sc_manager_handle);
         CloseServiceHandle(service_handle);
+    }
+
+    bool Service::Uninstall()
+    {
+        auto sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+        if (sc_manager_handle == NULL) {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            return false;
+        }
+
+        auto service_handle = OpenServiceA(sc_manager_handle,
+            GetServiceName().c_str(),
+            SERVICE_ALL_ACCESS);
+        if (service_handle == NULL) {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            CloseServiceHandle(sc_manager_handle);
+            return false;
+        }
+
+        SERVICE_STATUS service_status;
+        if(QueryServiceStatus(service_handle, &service_status)== 0)
+        {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            CloseServiceHandle(sc_manager_handle);
+            CloseServiceHandle(service_handle);
+            return false;
+        }
+        if (service_status.dwCurrentState == SERVICE_RUNNING) {
+            if(ControlService(service_handle, SERVICE_CONTROL_STOP, &service_status)== 0) {
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
+                CloseServiceHandle(sc_manager_handle);
+                CloseServiceHandle(service_handle);
+                return false;
+            }
+            if(service_status.dwCurrentState != NO_ERROR){
+                GD_LOG_ERROR("[service_status.dwCurrentState !=  NO_ERROR]");
+                CloseServiceHandle(sc_manager_handle);
+                CloseServiceHandle(service_handle);
+                return false;
+            }
+            do {
+                if (QueryServiceStatus(service_handle, &service_status) == 0)
+                {
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
+                    CloseServiceHandle(sc_manager_handle);
+                    CloseServiceHandle(service_handle);
+                    return false;
+                }
+                Sleep(1000);
+            } while (service_status.dwCurrentState != SERVICE_STOPPED);
+        }
+
+        if(DeleteService(service_handle) == 0)
+        {
+            GD_LOG_ERROR("[service_status.dwCurrentState !=  NO_ERROR]");
+            CloseServiceHandle(sc_manager_handle);
+            CloseServiceHandle(service_handle);
+            return false;
+        }
+
+        CloseServiceHandle(sc_manager_handle);
+        CloseServiceHandle(service_handle);
+        return true;
     }
 
     int Service::Start() {

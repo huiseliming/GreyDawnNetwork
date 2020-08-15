@@ -28,6 +28,11 @@ namespace GreyDawn
         bool Install();
 
         /*
+         * uninstall the service
+         */
+        bool Uninstall();
+
+        /*
          * run the service
          */
         int Start();
