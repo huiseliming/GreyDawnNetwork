@@ -1,4 +1,3 @@
-#include <gtest/gtest.h>
 #include <utility/Utility.h>
 
 using namespace GreyDawn;
@@ -7,6 +6,7 @@ using namespace GreyDawn;
 class TestService : public Service
 {
 public:
+	// This case the log output to C:\Windows\System32\logs
 	int Run() override
 	{
 		{
@@ -23,6 +23,11 @@ public:
 		return EXIT_SUCCESS;
 	}
 
+	std::string GetServiceName() override
+	{
+		return "GreyDawnServiceTest";
+	}
+
 	bool AwaitChange() 
 	{
 		std::unique_lock<std::mutex> lock(wait_mutex_);
@@ -36,16 +41,21 @@ public:
 	
 };
 
-
-
-TEST(tests, ServiceTests) 
+int main(int argc, char* argv[])
 {
+	TestService ts;
+	if (argc > 1 && !strcmp(argv[1],"install"))
 	{
-		TestService ts;
-		ASSERT_TRUE(ts.Start() == EXIT_SUCCESS);
-		std::this_thread::sleep_for(std::chrono::seconds(1));
-		ts.Stop();
-		ASSERT_TRUE(ts.AwaitChange());
+		ts.Install();
+	}
+	else if (argc > 1 && !strcmp(argv[1], "uninstall"))
+	{
+		ts.Uninstall();
+	}
+	else 
+	{
+		int exit_code = ts.Start();
+		return exit_code;
 	}
 }
 

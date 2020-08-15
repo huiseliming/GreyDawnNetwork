@@ -1,8 +1,9 @@
 ﻿#include "utility/Service.h"
-#include "utility/Singleton.h"
 #include "utility/Logger.h"
 
 namespace GreyDawn{
+
+    Service* Service::Instance = nullptr;
 
     Service::Service()
     {
@@ -15,6 +16,7 @@ namespace GreyDawn{
             );
         serviceStatus.dwWin32ExitCode = NO_ERROR;
     }
+
     Service::~Service()
     {
         if (!CloseHandle(stop_event_))
@@ -23,107 +25,108 @@ namespace GreyDawn{
 
     bool Service::Install()
     {
-        auto sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-        if(sc_manager_handle == NULL) {
+        SC_HANDLE sc_manager_handle = NULL;
+        SC_HANDLE service_handle = NULL;
+        try{
+            sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+            if(sc_manager_handle == NULL) 
+                throw std::exception("Win32 API OpenSCManagerA return NULL");
+
+            service_handle = CreateServiceA(sc_manager_handle,
+                GetServiceName().c_str(),
+                GetServiceName().c_str(),
+                SERVICE_ALL_ACCESS,
+                SERVICE_WIN32_OWN_PROCESS,
+                SERVICE_DEMAND_START,
+                SERVICE_ERROR_NORMAL,
+                GetExecuteFileAbsolutePath().c_str(),
+                NULL,
+                NULL,
+                NULL,
+                NULL,
+                NULL);
+            if(service_handle == NULL) 
+                throw std::exception("Win32 API CreateServiceA return NULL");
+            GD_LOG_INFO("Service {} installed successfully", GetServiceName().c_str());
+        } catch (const std::exception& e) {
             GD_LOG_OUTPUT_SYSTEM_ERROR();
+            if (sc_manager_handle)
+                if (!CloseServiceHandle(sc_manager_handle))
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
+            if (service_handle)
+                if (!CloseServiceHandle(service_handle))
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
-        }
-        auto service_handle = CreateServiceA(sc_manager_handle,
-            GetServiceName().c_str(),
-            GetServiceName().c_str(),
-            SERVICE_ALL_ACCESS,
-            SERVICE_WIN32_OWN_PROCESS,
-            SERVICE_DEMAND_START,
-            SERVICE_ERROR_NORMAL,
-            GetExecuteFileAbsolutePath().c_str(),
-            NULL, 
-            NULL, 
-            NULL,
-            NULL, 
-            NULL);
-        if(service_handle == NULL) {
+        } 
+        if (!CloseServiceHandle(sc_manager_handle))
             GD_LOG_OUTPUT_SYSTEM_ERROR();
-            CloseServiceHandle(sc_manager_handle);
-            return false;
-        }
-        GD_LOG_INFO("Service {} installed successfully", GetServiceName());
-        CloseServiceHandle(sc_manager_handle);
-        CloseServiceHandle(service_handle);
+        if (!CloseServiceHandle(service_handle))
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+        return true;
     }
 
     bool Service::Uninstall()
     {
-        auto sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
-        if (sc_manager_handle == NULL) {
-            GD_LOG_OUTPUT_SYSTEM_ERROR();
-            return false;
-        }
+        SC_HANDLE sc_manager_handle = NULL;
+        SC_HANDLE service_handle = NULL;
+        try{
+            sc_manager_handle = OpenSCManagerA(NULL, NULL, SC_MANAGER_ALL_ACCESS);
+            if (sc_manager_handle == NULL) 
+                throw std::exception("Win32 API OpenSCManagerA Failed");
 
-        auto service_handle = OpenServiceA(sc_manager_handle,
-            GetServiceName().c_str(),
-            SERVICE_ALL_ACCESS);
-        if (service_handle == NULL) {
-            GD_LOG_OUTPUT_SYSTEM_ERROR();
-            CloseServiceHandle(sc_manager_handle);
-            return false;
-        }
+            service_handle = OpenServiceA(sc_manager_handle,
+                GetServiceName().c_str(),
+                SERVICE_ALL_ACCESS);
+            if (service_handle == NULL) 
+                throw std::exception("Win32 API OpenServiceA Failed");
 
-        SERVICE_STATUS service_status;
-        if(QueryServiceStatus(service_handle, &service_status)== 0)
-        {
-            GD_LOG_OUTPUT_SYSTEM_ERROR();
-            CloseServiceHandle(sc_manager_handle);
-            CloseServiceHandle(service_handle);
-            return false;
-        }
-        if (service_status.dwCurrentState == SERVICE_RUNNING) {
-            if(ControlService(service_handle, SERVICE_CONTROL_STOP, &service_status)== 0) {
-                GD_LOG_OUTPUT_SYSTEM_ERROR();
-                CloseServiceHandle(sc_manager_handle);
-                CloseServiceHandle(service_handle);
-                return false;
-            }
-            if(service_status.dwCurrentState != NO_ERROR){
-                GD_LOG_ERROR("[service_status.dwCurrentState !=  NO_ERROR]");
-                CloseServiceHandle(sc_manager_handle);
-                CloseServiceHandle(service_handle);
-                return false;
-            }
-            do {
-                if (QueryServiceStatus(service_handle, &service_status) == 0)
-                {
-                    GD_LOG_OUTPUT_SYSTEM_ERROR();
-                    CloseServiceHandle(sc_manager_handle);
-                    CloseServiceHandle(service_handle);
-                    return false;
+            SERVICE_STATUS service_status;
+            if(QueryServiceStatus(service_handle, &service_status)== 0) 
+                throw std::exception("Win32 API QueryServiceStatus Failed");
+            if (service_status.dwCurrentState == SERVICE_RUNNING) {
+                if(ControlService(service_handle, SERVICE_CONTROL_STOP, &service_status)== 0) 
+                    throw std::exception("Win32 API ControlService Failed");
+                if(service_status.dwCurrentState != NO_ERROR){
+                    throw std::exception("service_status.dwCurrentState != NO_ERROR");
                 }
-                Sleep(1000);
-            } while (service_status.dwCurrentState != SERVICE_STOPPED);
-        }
-
-        if(DeleteService(service_handle) == 0)
-        {
-            GD_LOG_ERROR("[service_status.dwCurrentState !=  NO_ERROR]");
-            CloseServiceHandle(sc_manager_handle);
-            CloseServiceHandle(service_handle);
+                do {
+                    if (QueryServiceStatus(service_handle, &service_status) == 0)
+                        throw std::exception("Win32 API QueryServiceStatus Failed");
+                    Sleep(1000);
+                } while (service_status.dwCurrentState != SERVICE_STOPPED);
+            }
+            if(DeleteService(service_handle) == 0)
+                throw std::exception("Win32 API DeleteService Failed");
+            GD_LOG_INFO("Service {} uninstalled successfully", GetServiceName().c_str());
+        } catch (const std::exception&) {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+            if (sc_manager_handle)
+                if (!CloseServiceHandle(sc_manager_handle))
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
+            if (service_handle)
+                if (!CloseServiceHandle(service_handle))
+                    GD_LOG_OUTPUT_SYSTEM_ERROR();
             return false;
         }
-
-        CloseServiceHandle(sc_manager_handle);
-        CloseServiceHandle(service_handle);
+        if (!CloseServiceHandle(sc_manager_handle))
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
+        if (!CloseServiceHandle(service_handle))
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         return true;
     }
 
     int Service::Start() {
-        auto name = Singleton<Service>::Instance().GetServiceName();
+        assert(Service::Instance == nullptr && "Start call only once");
+        Service::Instance = this;
+        auto name = Service::Instance->GetServiceName();
         SERVICE_TABLE_ENTRYA dispatchTable[] = {
-            {(LPSTR)name.data(), ServiceMain},
+            {(LPSTR)name.data(), (LPSERVICE_MAIN_FUNCTION)Service::ServiceMain},
             {NULL, NULL}
         };
-        if (!StartServiceCtrlDispatcherA(dispatchTable)) {
+        if (StartServiceCtrlDispatcherA(dispatchTable)) {
             return EXIT_SUCCESS;
-        }
-        else {
+        } else {
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
             return EXIT_FAILURE;
         }
     }
@@ -131,7 +134,7 @@ namespace GreyDawn{
     //Window Callback
     VOID WINAPI Service::ServiceMain(DWORD dwArgc, LPSTR* lpszArgv) 
     {
-        Singleton<Service>::Instance().Main();
+        Service::Instance->Main();
     }
 
     VOID WINAPI Service::ServiceControlHandler(DWORD dwControl) 
@@ -139,19 +142,20 @@ namespace GreyDawn{
         switch (dwControl)
         {
         case SERVICE_CONTROL_STOP: 
-            Singleton<Service>::Instance().Stop();
+            Service::Instance->Stop();
             break;
         default:
             break;
         }
     }
+
     void Service::ReportServiceStatus() {
         (void)SetServiceStatus(serviceStatusHandle, &serviceStatus);
     }
 
     int Service::Main() {
         serviceStatusHandle = RegisterServiceCtrlHandler(
-            Singleton<Service>::Instance().GetServiceName().c_str(),
+            Service::Instance->GetServiceName().c_str(),
             Service::ServiceControlHandler);
         if (!serviceStatusHandle)
         {
@@ -161,11 +165,10 @@ namespace GreyDawn{
         serviceStatus.dwServiceSpecificExitCode = 0;
         serviceStatus.dwCurrentState = SERVICE_RUNNING;
         ReportServiceStatus();
-        const auto runResult = Singleton<Service>::Instance().Run();
+        const auto runResult = Service::Instance->Run();
         if (runResult == 0) {
             serviceStatus.dwWin32ExitCode = NO_ERROR;
-        }
-        else {
+        } else {
             serviceStatus.dwWin32ExitCode = ERROR_SERVICE_SPECIFIC_ERROR;
             serviceStatus.dwServiceSpecificExitCode = (DWORD)runResult;
         }

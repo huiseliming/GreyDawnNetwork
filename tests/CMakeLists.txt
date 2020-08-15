@@ -16,6 +16,7 @@ target_link_libraries(${This} PUBLIC
     GTest::gtest_main
 )
 
+add_subdirectory(Service)
 add_subdirectory(SumDynamicLibrary)
 
 add_test(

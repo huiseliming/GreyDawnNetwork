@@ -57,14 +57,14 @@ namespace GreyDawn
 
         static VOID WINAPI ServiceControlHandler(DWORD dwControl);
 
-        void Service::ReportServiceStatus();
+        void ReportServiceStatus();
 
         int Main();
 
     protected:
-
         HANDLE stop_event_ = INVALID_HANDLE_VALUE;
 
+        static Service* Instance;
 
     private:
 #ifdef _WIN32
