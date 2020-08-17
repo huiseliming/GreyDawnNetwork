@@ -42,18 +42,9 @@ public:
 
     static void SignalHandler(int);
 
-    void PipeMessageLoop();
-
-    void MonitorChild();
+    void PipeMessage();
 
     void JoinChild();
-
-    unsigned int StartChild(
-        std::string program,
-        const std::vector< std::string >& args,
-        std::function< void() > child_exited,
-        std::function< void() > child_crashed
-        );
 
     static unsigned int StartDetached(
         std::string program,

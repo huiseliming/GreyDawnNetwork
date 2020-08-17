@@ -6,14 +6,27 @@ using namespace GreyDawn;
 
 TEST(tests, SubprocessTest)
 {
-	Subprocess subprocess;
-	subprocess.Create(
-		GetExecuteFileDirectoryAbsolutePath() + "/SubprocessExample.exe",
-		{},
-		[] { GD_LOG_INFO("child_exited"); },
-		[] { GD_LOG_INFO("child_crashed"); }
-	);
-
+	bool child_exited_check = true;
+	bool child_crashed_check = false;
+	{
+		Subprocess subprocess;
+		subprocess.Create(
+			GetExecuteFileDirectoryAbsolutePath() + "\\SubprocessExample.exe",
+			{},
+			[&] 
+			{
+				child_exited_check = true;
+			},
+			[&] 
+			{
+				child_crashed_check = true;
+			}
+		);
+	}
+	{
+		ASSERT_TRUE(child_exited_check);
+		ASSERT_FALSE(child_crashed_check);
+	}
 }
 
 

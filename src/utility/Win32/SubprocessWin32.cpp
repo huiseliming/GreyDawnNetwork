@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <inttypes.h>
 #include <Psapi.h>
+
 namespace GreyDawn
 {
     std::vector< char > MakeCommandLine(const std::string& program, const std::vector< std::string >& args) 
@@ -101,23 +102,21 @@ namespace GreyDawn
         std::function< void() > child_exited,
         std::function< void() > child_crashed
     ) {
-        HANDLE read_pipe_;
-        HANDLE write_pipe_;
         HANDLE child_read_pipe;
         HANDLE child_write_pipe;
         try
         {
             SECURITY_ATTRIBUTES sa;
-            (void)memset(&sa, 0, sizeof(sa));
             sa.nLength = sizeof(sa);
             sa.bInheritHandle = TRUE;
+            sa.lpSecurityDescriptor = NULL;
             THROW_SYSTEM_ERROR_IF_FAILED(!CreatePipe(&read_pipe_, &child_write_pipe, &sa, 0));
             THROW_SYSTEM_ERROR_IF_FAILED(!CreatePipe(&child_read_pipe, &write_pipe_, &sa, 0));
 
             std::vector< std::string > command_line_args;
             command_line_args.push_back("child"); //child mark
-            command_line_args.push_back(fmt::format("{:x}", (uint64_t)child_read_pipe));
-            command_line_args.push_back(fmt::format("{:x}", (uint64_t)child_write_pipe));
+            command_line_args.push_back(fmt::format("{:d}", (uint64_t)child_read_pipe));
+            command_line_args.push_back(fmt::format("{:d}", (uint64_t)child_write_pipe));
             command_line_args.insert(command_line_args.end(), args.begin(), args.end());
             if (
                 (program.length() < 4)
@@ -149,20 +148,22 @@ namespace GreyDawn
             child_ = pi.hProcess;
             child_crashed_ = child_crashed;
             child_exited_ = child_exited;
-            worker_ = std::thread(&Subprocess::MonitorChild, this);
+            (void)CloseHandle(child_read_pipe);
+            (void)CloseHandle(child_write_pipe);
+            worker_ = std::thread(&Subprocess::PipeMessage, this);
             return (unsigned int)pi.dwProcessId;
         }
         catch (const std::exception& e)
         {
             GD_LOG_ERROR("[std::exception>{}]",e.what());
             if (read_pipe_)
-                CloseHandle(read_pipe_);
+                (void)CloseHandle(read_pipe_);
             if (write_pipe_)
-                CloseHandle(write_pipe_);
+                (void)CloseHandle(write_pipe_);
             if (child_read_pipe)
-                CloseHandle(child_read_pipe);
+                (void)CloseHandle(child_read_pipe);
             if (child_write_pipe)
-                CloseHandle(child_write_pipe);
+                (void)CloseHandle(child_write_pipe);
             return 0;
         }
         catch (...)
@@ -172,33 +173,33 @@ namespace GreyDawn
         }
     }
 
-    void Subprocess::SignalHandler(int)
+    void Subprocess::PipeMessage() 
     {
-
-    }
-
-    void Subprocess::PipeMessageLoop() 
-    {
-        (void)WaitForSingleObject(read_pipe_, INFINITE);
+        // message must 64 bit alignment otherwise the head will be split
         std::vector<uint8_t> message;
         DWORD amtRead = 0;
         BOOL return_code;
-        size_t message_size;
-        size_t remain_size;
-        do {
+        uint64_t message_size = 1;
+        uint64_t remain_size = 0;
+        for (;;)
+        {
             std::array<uint8_t, 4096> buffer;
+            memset(&buffer[0],0xFF,4096);
             return_code = ReadFile(read_pipe_, &buffer, 4096, &amtRead, NULL);
             if (return_code == 0)
             {
-                child_crashed_();
+                if(child_ != INVALID_HANDLE_VALUE)
+                    child_crashed_();
                 break;
             }
             if (remain_size == 0)
             {
-                void * ptr = message.data();
-                message_size = *(size_t *)ptr;
+                message.insert(message.begin(),buffer.begin(),buffer.begin() + sizeof(uint64_t));
+                message_size = (*(uint64_t*)message.data());
+                if (message_size == 0)
+                    break;
                 remain_size = message_size;
-                message.insert(message.end(), buffer.begin() + sizeof(size_t), buffer.begin() + amtRead - sizeof(size_t));
+                message.insert(message.end(), buffer.begin() + sizeof(uint64_t), buffer.begin() + amtRead - sizeof(uint64_t));
                 remain_size -= amtRead;
             }
             else
@@ -207,38 +208,34 @@ namespace GreyDawn
                 remain_size -= amtRead;
             }
             if (remain_size = 0)
-            {
-                GD_LOG_INFO("DSADASDASDASDSADSAD");
+            {  
+                message.push_back('\0');
+                GD_LOG_INFO("[message : {}]", (char *)message.data());
                 message.clear();
             }
-
-        } while(message_size == 0);
-        child_exited_();
-        (void)WaitForSingleObject(child_, INFINITE);
-    }
-
-    void Subprocess::MonitorChild() {
-        previous_signal_handler_ = signal(SIGINT, SignalHandler);
-        (void)WaitForSingleObject(read_pipe_, INFINITE);
-        uint8_t token;
-        DWORD amtRead = 0;
-        if (ReadFile(read_pipe_, &token, 1, &amtRead, NULL) == FALSE) {
-            child_crashed_();
         }
-        else {
-            child_exited_();
+        if (child_ != INVALID_HANDLE_VALUE) 
+        {
+            if(message_size == 0)
+                child_exited_();
+            (void)WaitForSingleObject(child_, INFINITE);
         }
-        (void)WaitForSingleObject(child_, INFINITE);
-        (void)signal(SIGINT, previous_signal_handler_);
+        else
+        {
+            std::lock_guard<std::mutex> lock(write_pipe_mutex_);
+            uint64_t signal = 0;
+            DWORD byte_written;
+            (void)WriteFile(write_pipe_, &signal, sizeof(uint64_t), &byte_written, NULL);
+        }
     }
 
     void Subprocess::JoinChild() {
         if (worker_.joinable()) {
             {
                 std::lock_guard<std::mutex> lock(write_pipe_mutex_);
-                size_t signal = 0;
+                uint64_t signal = 0;
                 DWORD byte_written;
-                (void)WriteFile(write_pipe_, &signal, sizeof(signal), &byte_written, NULL);
+                (void)WriteFile(write_pipe_, &signal, sizeof(uint64_t), &byte_written, NULL);
             }
             worker_.join();
             (void)CloseHandle(child_);
@@ -246,71 +243,6 @@ namespace GreyDawn
             (void)CloseHandle(read_pipe_);
             read_pipe_ = INVALID_HANDLE_VALUE;
         }
-    }
-
-    unsigned int Subprocess::StartChild(
-        std::string program,
-        const std::vector< std::string >& args,
-        std::function< void() > child_exited,
-        std::function< void() > child_crashed
-    ){
-        JoinChild();
-        child_exited_ = child_exited;
-        child_crashed_ = child_crashed;
-        SECURITY_ATTRIBUTES sa;
-        (void)memset(&sa, 0, sizeof(sa));
-        sa.nLength = sizeof(sa);
-        sa.bInheritHandle = TRUE;
-        HANDLE write_pipe_;
-        if (CreatePipe(&read_pipe_, &write_pipe_, &sa, 0) == FALSE) {
-            return 0;
-        }
-
-        if (
-            (program.length() < 4)
-            || (program.substr(program.length() - 4) != ".exe")
-            ) {
-            program += ".exe";
-        }
-
-        std::vector< std::string > childArgs;
-        childArgs.push_back("child");
-        childArgs.push_back(fmt::format("{:x}", (uint64_t)write_pipe_));
-        childArgs.insert(childArgs.end(), args.begin(), args.end());
-
-        auto commandLine = MakeCommandLine(program, childArgs);
-
-        // Launch program.
-        STARTUPINFOA si;
-        (void)memset(&si, 0, sizeof(si));
-        si.cb = sizeof(si);
-        PROCESS_INFORMATION pi;
-        if (
-            CreateProcessA(
-                program.c_str(),
-                &commandLine[0],
-                NULL,
-                NULL,
-                TRUE,
-                0,
-                NULL,
-                NULL,
-                &si,
-                &pi
-                ) == 0
-            ) {
-            if(CloseHandle(read_pipe_))
-                GD_LOG_OUTPUT_SYSTEM_ERROR();
-            read_pipe_ = INVALID_HANDLE_VALUE;
-            if (CloseHandle(write_pipe_))
-                GD_LOG_OUTPUT_SYSTEM_ERROR();
-            return 0;
-        }
-        child_ = pi.hProcess;
-        if (CloseHandle(write_pipe_))
-            GD_LOG_OUTPUT_SYSTEM_ERROR();
-        worker_ = std::thread(&Subprocess::MonitorChild, this);
-        return (unsigned int)pi.dwProcessId;
     }
 
     bool Subprocess::ContactParent(std::vector< std::string >& args) {
