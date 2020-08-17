@@ -1,5 +1,6 @@
 ﻿#include "utility/Subprocess.h"
 #include "utility/Logger.h"
+#include "utility/SystemErrorException.h"
 #include <signal.h>
 #include <inttypes.h>
 #include <Psapi.h>
@@ -91,6 +92,83 @@ namespace GreyDawn
             other.previous_signal_handler_ = nullptr;
         }
         return *this;
+    }
+
+    unsigned int Subprocess::Create(
+        std::string program,
+        const std::vector< std::string >& args,
+        std::function< void() > child_exited,
+        std::function< void() > child_crashed
+    ) {
+        HANDLE read_pipe_;
+        HANDLE write_pipe_;
+        HANDLE child_read_pipe;
+        HANDLE child_write_pipe;
+        try
+        {
+            SECURITY_ATTRIBUTES sa;
+            (void)memset(&sa, 0, sizeof(sa));
+            sa.nLength = sizeof(sa);
+            sa.bInheritHandle = TRUE;
+            THROW_SYSTEM_ERROR_IF_FAILED(!CreatePipe(&read_pipe_, &child_write_pipe, &sa, 0));
+            THROW_SYSTEM_ERROR_IF_FAILED(!CreatePipe(&child_read_pipe, &write_pipe_, &sa, 0));
+
+            std::vector< std::string > command_line_args;
+            command_line_args.push_back("child"); //child mark
+            command_line_args.push_back(fmt::format("{:x}", (uint64_t)child_read_pipe));
+            command_line_args.push_back(fmt::format("{:x}", (uint64_t)child_write_pipe));
+            command_line_args.insert(command_line_args.end(), args.begin(), args.end());
+            if (
+                (program.length() < 4)
+                || (program.substr(program.length() - 4) != ".exe")
+                ) {
+                program += ".exe";
+            }
+            auto commandLine = MakeCommandLine(program, command_line_args);
+
+            // Launch program.
+            STARTUPINFOA si;
+            (void)memset(&si, 0, sizeof(si));
+            si.cb = sizeof(si);
+            PROCESS_INFORMATION pi;
+            THROW_SYSTEM_ERROR_IF_FAILED(
+                !CreateProcessA(
+                    program.c_str(),
+                    &commandLine[0],
+                    NULL,
+                    NULL,
+                    TRUE,
+                    0,
+                    NULL,
+                    NULL,
+                    &si,
+                    &pi
+                )
+            );
+            child_ = pi.hProcess;
+            child_crashed_ = child_crashed;
+            child_exited_ = child_exited;
+            worker_ = std::thread(&Subprocess::MonitorChild, this);
+            return (unsigned int)pi.dwProcessId;
+        }
+        catch (const std::exception& e)
+        {
+            GD_LOG_ERROR("[std::exception>{}]",e.what());
+            if (read_pipe_)
+                CloseHandle(read_pipe_);
+            if (write_pipe_)
+                CloseHandle(write_pipe_);
+            if (child_read_pipe)
+                CloseHandle(child_read_pipe);
+            if (child_write_pipe)
+                CloseHandle(child_write_pipe);
+            return 0;
+        }
+        catch (...)
+        {
+            GD_LOG_ERROR("Unkonw Expection");
+            return 0;
+        }
     }
 
     void SignalHandler(int)

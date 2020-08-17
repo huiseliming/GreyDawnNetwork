@@ -9,9 +9,6 @@
 
 #endif
 
-
-
-
 namespace GreyDawn
 {
 
@@ -34,6 +31,14 @@ public:
     Subprocess& operator=(const Subprocess&) = delete;
     Subprocess& operator=(Subprocess&&);
 
+    unsigned int Create(
+        std::string program,
+        const std::vector< std::string >& args,
+        std::function< void() > child_exited,
+        std::function< void() > child_crashed
+    );
+
+
     static void SignalHandler(int);
 
     void MonitorChild();
@@ -43,8 +48,8 @@ public:
     unsigned int StartChild(
         std::string program,
         const std::vector< std::string >& args,
-        std::function< void() > childExited,
-        std::function< void() > childCrashed
+        std::function< void() > child_exited,
+        std::function< void() > child_crashed
         );
 
     static unsigned int StartDetached(
