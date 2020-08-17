@@ -1,6 +1,7 @@
 ﻿#include "utility/Subprocess.h"
 #include "utility/Logger.h"
 #include "utility/SystemErrorException.h"
+#include <array>
 #include <signal.h>
 #include <inttypes.h>
 #include <Psapi.h>
@@ -171,9 +172,49 @@ namespace GreyDawn
         }
     }
 
-    void SignalHandler(int)
+    void Subprocess::SignalHandler(int)
     {
 
+    }
+
+    void Subprocess::PipeMessageLoop() 
+    {
+        (void)WaitForSingleObject(read_pipe_, INFINITE);
+        std::vector<uint8_t> message;
+        DWORD amtRead = 0;
+        BOOL return_code;
+        size_t message_size;
+        size_t remain_size;
+        do {
+            std::array<uint8_t, 4096> buffer;
+            return_code = ReadFile(read_pipe_, &buffer, 4096, &amtRead, NULL);
+            if (return_code == 0)
+            {
+                child_crashed_();
+                break;
+            }
+            if (remain_size == 0)
+            {
+                void * ptr = message.data();
+                message_size = *(size_t *)ptr;
+                remain_size = message_size;
+                message.insert(message.end(), buffer.begin() + sizeof(size_t), buffer.begin() + amtRead - sizeof(size_t));
+                remain_size -= amtRead;
+            }
+            else
+            {
+                message.insert(message.end(), buffer.begin(), buffer.begin() + amtRead);
+                remain_size -= amtRead;
+            }
+            if (remain_size = 0)
+            {
+                GD_LOG_INFO("DSADASDASDASDSADSAD");
+                message.clear();
+            }
+
+        } while(message_size == 0);
+        child_exited_();
+        (void)WaitForSingleObject(child_, INFINITE);
     }
 
     void Subprocess::MonitorChild() {
@@ -193,6 +234,12 @@ namespace GreyDawn
 
     void Subprocess::JoinChild() {
         if (worker_.joinable()) {
+            {
+                std::lock_guard<std::mutex> lock(write_pipe_mutex_);
+                size_t signal = 0;
+                DWORD byte_written;
+                (void)WriteFile(write_pipe_, &signal, sizeof(signal), &byte_written, NULL);
+            }
             worker_.join();
             (void)CloseHandle(child_);
             child_ = INVALID_HANDLE_VALUE;
@@ -268,15 +315,19 @@ namespace GreyDawn
 
     bool Subprocess::ContactParent(std::vector< std::string >& args) {
         if (
-            (args.size() >= 2)
+            (args.size() >= 3)
             && (args[0] == "child")
             ) {
             uint64_t pipeNumber;
             if (sscanf(args[1].c_str(), "%" SCNu64, &pipeNumber) != 1) {
                 return false;
             }
+            read_pipe_ = (HANDLE)pipeNumber;
+            if (sscanf(args[2].c_str(), "%" SCNu64, &pipeNumber) != 1) {
+                return false;
+            }
             write_pipe_ = (HANDLE)pipeNumber;
-            args.erase(args.begin(), args.begin() + 2);
+            args.erase(args.begin(), args.begin() + 3);
             return true;
         }
         return false;

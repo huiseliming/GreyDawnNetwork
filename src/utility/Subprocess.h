@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <thread>
+#include <mutex>
 #include <functional>
 #ifdef _WIN32
 #include <Windows.h>
@@ -41,6 +42,8 @@ public:
 
     static void SignalHandler(int);
 
+    void PipeMessageLoop();
+
     void MonitorChild();
 
     void JoinChild();
@@ -73,6 +76,7 @@ private:
     HANDLE child_ = INVALID_HANDLE_VALUE;
     HANDLE read_pipe_ = INVALID_HANDLE_VALUE;
     HANDLE write_pipe_ = INVALID_HANDLE_VALUE;
+    std::mutex write_pipe_mutex_;
     void (*previous_signal_handler_)(int) = nullptr;
 #elif __linux__
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+﻿cmake_minimum_required(VERSION 3.12)
 set(This tests)
 
 FILE(GLOB_RECURSE TestSourceFiles  ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp) #��ȡ��ǰĿ¼Դ�ļ�
@@ -18,7 +18,7 @@ target_link_libraries(${This} PUBLIC
 
 add_subdirectory(Service)
 add_subdirectory(SumDynamicLibrary)
-
+add_subdirectory(SubprocessExample)
 add_test(
     NAME ${This}
     COMMAND ${This}
