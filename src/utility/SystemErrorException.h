@@ -2,9 +2,12 @@
 #include "Exception.h"
 #include "SystemAbstraction.h"
 #include <spdlog/spdlog.h>
-
+#ifdef _WIN32
 #define SYSTEM_ERROR_EXCEPT(...) GreyDawn::SystemErrorExpetion(__LINE__ , __FILE__, GetLastError(), ##__VA_ARGS__)
-#define THROW_SYSTEM_ERROR_EXCEPT(...) throw SYSTEM_ERROR_EXCEPT(##__VA_ARGS__)
+#elif __linux__
+#define SYSTEM_ERROR_EXCEPT(...) GreyDawn::SystemErrorExpetion(__LINE__ , __FILE__, errno, ##__VA_ARGS__)
+#endif
+#define THROW_SYSTEM_ERROR_EXCEPT(...) throw SYSTEM_ERROR_EXCEPT(__VA_ARGS__)
 #define THROW_SYSTEM_ERROR_IF_FAILED(FailedExpr) if(FailedExpr) THROW_SYSTEM_ERROR_EXCEPT(#FailedExpr)
 
 
@@ -15,7 +18,8 @@ class SystemErrorExpetion :public Exception
 {
 public:
 	SystemErrorExpetion(int line, const char* file, uint32_t error_code, std::string failed_expr = "Unknow") noexcept
-		: Exception(line, file, TranslateErrorCode(error_code).c_str())
+		: Exception(line, file, TranslateErrorCode((int)error_code).c_str())
+		, error_code_(error_code)
 		, failed_expr_(failed_expr)
 	{
 	}

@@ -7,6 +7,10 @@
 
 namespace GreyDawn
 {
+    std::string TranslateErrorCode(int error_code)
+    {
+        return strerror(error_code);
+    }
 
     std::string& GetPathSeparators()
     {

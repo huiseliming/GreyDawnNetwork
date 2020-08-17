@@ -14,7 +14,10 @@ TEST(tests,ExceptionTest)
 TEST(tests, SystemErrorExceptionTest)
 {
 	ASSERT_THROW(THROW_SYSTEM_ERROR_EXCEPT("SystemErrorExceptionTest"), GreyDawn::SystemErrorExpetion);
+#ifdef _WIN32
 	ASSERT_THROW(THROW_SYSTEM_ERROR_IF_FAILED(!CloseHandle(NULL)), GreyDawn::SystemErrorExpetion);
+#elif __linux__
+#endif
 }
 
 

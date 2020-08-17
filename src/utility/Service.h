@@ -1,7 +1,6 @@
 ﻿#pragma once
 #ifdef _WIN32
 #include <Windows.h>
-#endif 
 
 #include <memory>
 #include <string>
@@ -63,11 +62,10 @@ namespace GreyDawn
         static Service* Instance;
 
     private:
-#ifdef _WIN32
         SERVICE_STATUS_HANDLE service_status_handle_;
         SERVICE_STATUS service_status_;
-#endif 
     };
 
 }
 
+#endif 

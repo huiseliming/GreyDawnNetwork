@@ -4,9 +4,9 @@
 
 namespace GreyDawn
 {
-    std::string& TranslateErrorCode(DWORD error_code)
+    std::string TranslateErrorCode(DWORD error_code)
     {
-        thread_local static std::string error_message;
+        std::string error_message;
         char* message_buffer = nullptr;
         //获取格式化错误
         const DWORD message_len = FormatMessageA(

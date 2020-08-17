@@ -4,7 +4,7 @@
 #include <sstream>
 
 #define EXCEPT(...) GreyDawn::Exception(__LINE__ , __FILE__, ##__VA_ARGS__)
-#define THROW_EXCEPT(...) throw EXCEPT(##__VA_ARGS__)
+#define THROW_EXCEPT(...) throw EXCEPT(__VA_ARGS__)
 
 namespace GreyDawn
 {

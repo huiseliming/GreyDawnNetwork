@@ -62,13 +62,11 @@ macro(SetPlatformImplSourceFiles SourceFiles Platform)
     foreach(SourceFile ${SourceFiles})
         if( (NOT (${Platform} STREQUAL "Win32")) AND 
           ( ${SourceFile} MATCHES ".*\\/Win32\\/.*Win32\\.cpp"))
-            message(${SourceFile})
             list(REMOVE_ITEM SourceFiles ${SourceFile})
         endif()
         if( (NOT (${Platform} STREQUAL "Linux")) AND 
           ( ${SourceFile} MATCHES ".*\\/Linux\\/.*Linux\\.cpp"))
             list(REMOVE_ITEM SourceFiles ${SourceFile})
-            message(${SourceFile})
         endif()
     endforeach()
 endmacro()
