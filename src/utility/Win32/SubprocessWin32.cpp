@@ -75,6 +75,8 @@ namespace GreyDawn
         other.child_ = INVALID_HANDLE_VALUE;
         read_pipe_ = other.read_pipe_;
         other.read_pipe_ = INVALID_HANDLE_VALUE;
+        write_pipe_ = other.write_pipe_;
+        other.write_pipe_ = INVALID_HANDLE_VALUE;
         previous_signal_handler_ = other.previous_signal_handler_;
         other.previous_signal_handler_ = nullptr;
     }
@@ -90,6 +92,8 @@ namespace GreyDawn
             other.child_ = INVALID_HANDLE_VALUE;
             read_pipe_ = other.read_pipe_;
             other.read_pipe_ = INVALID_HANDLE_VALUE;
+            write_pipe_ = other.write_pipe_;
+            other.write_pipe_ = INVALID_HANDLE_VALUE;
             previous_signal_handler_ = other.previous_signal_handler_;
             other.previous_signal_handler_ = nullptr;
         }
