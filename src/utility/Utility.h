@@ -4,7 +4,7 @@
 #include <spdlog/spdlog.h>
 #include "Utf8.h"
 #include "Logger.h"
-#include "Exception.h"
+#include "SystemErrorException.h"
 #include "Singleton.h"
 #include "ThreadPool.h"
 #include "DynamicLibrary.h"

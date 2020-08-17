@@ -44,11 +44,10 @@ namespace GreyDawn
             oss << file_ << "(" << line_ << ")";
             return oss.str();
         }
-    private:
+    protected:
         int line_;
         std::string file_;
         std::string message_;
-    protected:
         mutable std::string what_buffer_;
     };
 }
