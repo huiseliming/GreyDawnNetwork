@@ -146,12 +146,12 @@ namespace GreyDawn
     unsigned int Subprocess::Create(
         std::string program,
         const std::vector< std::string >& args,
-        std::function< void() > childExited,
-        std::function< void() > childCrashed
+        std::function< void() > child_exited,
+        std::function< void() > child_crashed
     ) {
         JoinChild();
-        childExited = childExited;
-        childCrashed = childCrashed;
+        child_exited_ = child_exited;
+        child_crashed_ = child_crashed;
         int read_pipe[2];
         int write_pipe[2];
         THROW_SYSTEM_ERROR_IF_FAILED(pipe(read_pipe) < 0);

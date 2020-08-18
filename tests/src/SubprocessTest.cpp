@@ -12,7 +12,7 @@ TEST(tests, SubprocessTest)
 	{
 		Subprocess subprocess;
 		subprocess.Create(
-			GetExecuteFileDirectoryAbsolutePath() + "\\SubprocessExample.exe",
+			GetExecuteFileDirectoryAbsolutePath() + "/SubprocessExample",
 			{},
 			[&] 
 			{
