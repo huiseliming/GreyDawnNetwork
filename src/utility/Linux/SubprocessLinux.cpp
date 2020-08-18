@@ -23,18 +23,18 @@ namespace GreyDawn
     void CloseFilesByFilter(std::vector<int> keep_opens)
     {
         std::vector< std::string > fds;
-        const std::string fdsDir("/proc/self/fd/");
+        const std::string fds_dir("/proc/self/fd/");
         for(auto& fd :std::filesystem::directory_iterator("/proc/self/fd"))
         {
-            const auto fdNumString = fd.path().string().substr(fdsDir.length());
-            int fdNum;
+            const auto fd_num_string = fd.path().string().substr(fds_dir.length());
+            int fd_num;
             for(auto keep_open : keep_opens)
             {
                 if (
-                    (sscanf(fdNumString.c_str(), "%d", &fdNum) == 1)
-                    && (fdNum != keep_open)
+                    (sscanf(fd_num_string.c_str(), "%d", &fd_num) == 1)
+                    && (fd_num != keep_open)
                 ) {
-                    (void)close(fdNum);
+                    (void)close(fd_num);
                 }
             }
         }
@@ -78,21 +78,15 @@ namespace GreyDawn
 
     Subprocess::~Subprocess() noexcept {
         JoinChild();
-        if (read_pipe_ != -1) {
-            (void)close(read_pipe_);
-        }
-        if (write_pipe_ != -1) {
-            (void)close(write_pipe_);
-        }
     }
 
     void Subprocess::JoinChild() {
         if (worker_.joinable()) {
             {
                 std::lock_guard<std::mutex> lock(write_pipe_mutex_);
-                uint64_t signal = 0;
+                uint64_t token = 0;
                 ssize_t byte_written;
-                byte_written = write(write_pipe_, &signal, sizeof(uint64_t));
+                byte_written = write(write_pipe_, &token, sizeof(uint64_t));
             }
             worker_.join();
             child_ = -1;
@@ -109,15 +103,15 @@ namespace GreyDawn
         //previous_signal_handler_ = signal(SIGINT, SignalHandler);
         // message must 64 bit alignment otherwise the head will be split
         std::vector<uint8_t> message;
-        ssize_t amtRead = 0;
+        ssize_t read_bytes = 0;
         uint64_t message_size = 1;
         uint64_t remain_size = 0;
         for (;;)
         {
             std::array<uint8_t, 4096> buffer;
             memset(&buffer[0],0xFF,4096);
-            amtRead = read(read_pipe_, &buffer, 4096);
-            if (amtRead == 0 || (amtRead < 0 && (errno != EINTR)))
+            read_bytes = read(read_pipe_, &buffer, 4096);
+            if (read_bytes == 0 || (read_bytes < 0 && (errno != EINTR)))
             {
                 if(child_ != -1)
                     child_crashed_();
@@ -130,13 +124,13 @@ namespace GreyDawn
                 if (message_size == 0)
                     break;
                 remain_size = message_size;
-                message.insert(message.end(), buffer.begin() + sizeof(uint64_t), buffer.begin() + amtRead - sizeof(uint64_t));
-                remain_size -= amtRead;
+                message.insert(message.end(), buffer.begin() + sizeof(uint64_t), buffer.begin() + read_bytes - sizeof(uint64_t));
+                remain_size -= read_bytes;
             }
             else
             {
-                message.insert(message.end(), buffer.begin(), buffer.begin() + amtRead);
-                remain_size -= amtRead;
+                message.insert(message.end(), buffer.begin(), buffer.begin() + read_bytes);
+                remain_size -= read_bytes;
             }
             if (remain_size = 0)
             {  
@@ -154,9 +148,9 @@ namespace GreyDawn
         else
         {
             std::lock_guard<std::mutex> lock(write_pipe_mutex_);
-            uint64_t signal = 0;
+            uint64_t token = 0;
             ssize_t byte_written = 0;
-            byte_written = write(write_pipe_, &signal, sizeof(uint64_t));
+            byte_written = write(write_pipe_, &token, sizeof(uint64_t));
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         //(void)signal(SIGINT, previous_signal_handler_);
@@ -175,25 +169,24 @@ namespace GreyDawn
         int write_pipe[2];
         THROW_SYSTEM_ERROR_IF_FAILED(pipe(read_pipe) < 0);
         THROW_SYSTEM_ERROR_IF_FAILED(pipe(write_pipe) < 0);
-
-        std::vector< std::vector< char > > childArgs;
-        childArgs.emplace_back(VectorFromVector(program));
-        childArgs.emplace_back(VectorFromVector("child"));
-        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",read_pipe[0])));
-        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",write_pipe[1])));
+        std::vector< std::vector< char > > command_line_args;
+        command_line_args.emplace_back(VectorFromVector(program));
+        command_line_args.emplace_back(VectorFromVector("child"));
+        command_line_args.emplace_back(VectorFromVector(fmt::format("{:d}",read_pipe[0])));
+        command_line_args.emplace_back(VectorFromVector(fmt::format("{:d}",write_pipe[1])));
         for (const auto arg: args) {
-            childArgs.emplace_back(arg.begin(),arg.end());
+            command_line_args.emplace_back(arg.begin(),arg.end());
         }
 
         // Launch program.
         child_ = fork();
         if (child_ == 0) {
             //CloseFilesByFilter(std::vector<int>({read_pipe[0],write_pipe[1]}));
-            std::vector< char* > argv(childArgs.size() + 1);
-            for (size_t i = 0; i < childArgs.size(); ++i) {
-                argv[i] = &childArgs[i][0];
+            std::vector< char* > argv(command_line_args.size() + 1);
+            for (size_t i = 0; i < command_line_args.size(); ++i) {
+                argv[i] = &command_line_args[i][0];
             }
-            argv[childArgs.size()] = NULL;
+            argv[command_line_args.size()] = NULL;
             (void)execv(program.c_str(), &argv[0]);
             (void)exit(-1);
         } else if (child_ < 0) { 
@@ -216,15 +209,15 @@ namespace GreyDawn
             (args.size() >= 3)
             && (args[0] == "child")
             ) {
-            int pipeNumber;
-            if (sscanf(args[1].c_str(), "%d", &pipeNumber) != 1) {
+            int pipe_number;
+            if (sscanf(args[1].c_str(), "%d", &pipe_number) != 1) {
                 return false;
             }
-            read_pipe_ = pipeNumber;
-            if (sscanf(args[2].c_str(), "%d", &pipeNumber) != 1) {
+            read_pipe_ = pipe_number;
+            if (sscanf(args[2].c_str(), "%d", &pipe_number) != 1) {
                 return false;
             }
-            write_pipe_ = pipeNumber;
+            write_pipe_ = pipe_number;
             args.erase(args.begin(), args.begin() + 3);
             return true;
         }

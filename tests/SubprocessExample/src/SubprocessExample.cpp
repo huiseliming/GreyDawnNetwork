@@ -10,7 +10,6 @@ int main(int argc, char* argv[])
 	{
 		command_line_args.push_back(argv[i]);
 	}
-	
 	Subprocess subprocess;
 	if (subprocess.ContactParent(command_line_args))
 	{

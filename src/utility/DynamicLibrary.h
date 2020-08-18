@@ -50,7 +50,7 @@ namespace GreyDawn
 #ifdef _WIN32
     HMODULE library_handle_ = nullptr;
 #elif __linux__
-    void* library_handle = nullptr;
+    void* library_handle_ = nullptr;
 #else
 #error "Unknown System"
 #endif 
