@@ -17,9 +17,9 @@ target_link_libraries(${This} PUBLIC
 )
 if (MSVC)
 add_subdirectory(Service)
-add_subdirectory(SubprocessExample)
 endif()
 add_subdirectory(SumDynamicLibrary)
+add_subdirectory(SubprocessExample)
 add_test(
     NAME ${This}
     COMMAND ${This}

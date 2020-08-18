@@ -6,7 +6,7 @@ using namespace GreyDawn;
 
 TEST(tests, SubprocessTest)
 {
-#ifdef _WIN32
+
 	bool child_exited_check = true;
 	bool child_crashed_check = false;
 	{
@@ -28,8 +28,6 @@ TEST(tests, SubprocessTest)
 		ASSERT_TRUE(child_exited_check);
 		ASSERT_FALSE(child_crashed_check);
 	}
-#elif __linux__
-#endif
 }
 
 
