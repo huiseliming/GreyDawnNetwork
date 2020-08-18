@@ -58,11 +58,10 @@ namespace GreyDawn
     {
         JoinChild();
         if (read_pipe_ != INVALID_HANDLE_VALUE) {
-            uint8_t token = '.';
-            DWORD amtWritten;
-            (void)WriteFile(read_pipe_, &token, 1, &amtWritten, NULL);
-            std::this_thread::sleep_for(std::chrono::seconds(1));
             (void)CloseHandle(read_pipe_);
+        }
+        if (write_pipe_ != INVALID_HANDLE_VALUE) {
+            (void)CloseHandle(write_pipe_);
         }
     }
 

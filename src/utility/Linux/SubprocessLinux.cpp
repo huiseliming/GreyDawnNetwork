@@ -78,6 +78,12 @@ namespace GreyDawn
 
     Subprocess::~Subprocess() noexcept {
         JoinChild();
+        if (read_pipe_ != -1) {
+            (void)close(read_pipe_);
+        }
+        if (write_pipe_ != -1) {
+            (void)close(write_pipe_);
+        }
     }
 
     void Subprocess::JoinChild() {
