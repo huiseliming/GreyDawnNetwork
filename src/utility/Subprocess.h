@@ -39,9 +39,6 @@ public:
         std::function< void() > child_crashed
     );
 
-
-    static void SignalHandler(int);
-
     void PipeMessage();
 
     void JoinChild();

@@ -11,6 +11,15 @@
 namespace GreyDawn
 {
 
+    std::vector< char > VectorFromVector(const std::string& s) {
+        std::vector< char > v(s.length() + 1);
+        for (size_t i = 0; i < s.length(); ++i) {
+            v[i] = s[i];
+        }
+        v[s.length()] = '\0';
+        return v;
+    }
+
     void CloseFilesByFilter(std::vector<int> keep_opens)
     {
         std::vector< std::string > fds;
@@ -87,9 +96,11 @@ namespace GreyDawn
             write_pipe_ = -1;
         }
     }
+    void SignalHandler(int){}
 
     void Subprocess::PipeMessage() 
     {
+        //previous_signal_handler_ = signal(SIGINT, SignalHandler);
         // message must 64 bit alignment otherwise the head will be split
         std::vector<uint8_t> message;
         ssize_t amtRead = 0;
@@ -100,8 +111,10 @@ namespace GreyDawn
             std::array<uint8_t, 4096> buffer;
             memset(&buffer[0],0xFF,4096);
             amtRead = read(read_pipe_, &buffer, 4096);
+            GD_LOG_ERROR("{:d}",amtRead);
             if (amtRead == 0 || (amtRead < 0 && (errno != EINTR)))
             {
+                GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(child_ != -1)
                     child_crashed_();
                 break;
@@ -140,7 +153,11 @@ namespace GreyDawn
             uint64_t signal = 0;
             ssize_t byte_written = 0;
             byte_written = write(write_pipe_, &signal, sizeof(uint64_t));
+            GD_LOG_ERROR("{:d}",byte_written);
+            GD_LOG_OUTPUT_SYSTEM_ERROR();
         }
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+        //(void)signal(SIGINT, previous_signal_handler_);
     }
 
     unsigned int Subprocess::Create(
@@ -156,14 +173,12 @@ namespace GreyDawn
         int write_pipe[2];
         THROW_SYSTEM_ERROR_IF_FAILED(pipe(read_pipe) < 0);
         THROW_SYSTEM_ERROR_IF_FAILED(pipe(write_pipe) < 0);
-        static const std::string child_string = "child";
+
         std::vector< std::vector< char > > childArgs;
-        childArgs.emplace_back(program.begin(),program.end());
-        childArgs.emplace_back(child_string.begin(),child_string.end());
-        const std::string child_read_pipe_num = fmt::format("{:d}",read_pipe[0]);
-        const std::string child_write_pipe_num = fmt::format("{:d}",write_pipe[1]);
-        childArgs.emplace_back(child_read_pipe_num.begin(),child_read_pipe_num.end());
-        childArgs.emplace_back(child_write_pipe_num.begin(),child_write_pipe_num.end());
+        childArgs.emplace_back(VectorFromVector(program));
+        childArgs.emplace_back(VectorFromVector("child"));
+        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",read_pipe[0])));
+        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",write_pipe[0])));
         for (const auto arg: args) {
             childArgs.emplace_back(arg.begin(),arg.end());
         }
@@ -171,7 +186,7 @@ namespace GreyDawn
         // Launch program.
         child_ = fork();
         if (child_ == 0) {
-            CloseFilesByFilter(std::vector<int>({read_pipe[0],write_pipe[1]}));
+            //CloseFilesByFilter(std::vector<int>({read_pipe[0],write_pipe[1]}));
             std::vector< char* > argv(childArgs.size() + 1);
             for (size_t i = 0; i < childArgs.size(); ++i) {
                 argv[i] = &childArgs[i][0];
