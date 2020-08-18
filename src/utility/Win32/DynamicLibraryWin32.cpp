@@ -19,27 +19,27 @@ namespace GreyDawn
         if(!SetCurrentDirectoryA(path.c_str()))
             GD_LOG_OUTPUT_SYSTEM_ERROR();
         const auto library = fmt::format("{}/{}.dll", path.c_str(), name.c_str());
-        library_handle = LoadLibraryA(library.c_str());
-        if (!library_handle)
+        library_handle_ = LoadLibraryA(library.c_str());
+        if (!library_handle_)
             GD_LOG_OUTPUT_SYSTEM_ERROR();
         if (!SetCurrentDirectoryA(&original_path[0])) {
             GD_LOG_OUTPUT_SYSTEM_ERROR();
         }
-        return (library_handle != NULL);
+        return (library_handle_ != NULL);
     }
 
     void DynamicLibrary::Unload()
     {
-        if (library_handle != nullptr) {
-            BOOL error_code = FreeLibrary(library_handle);
+        if (library_handle_ != nullptr) {
+            BOOL error_code = FreeLibrary(library_handle_);
             if (!error_code)
                 GD_LOG_OUTPUT_SYSTEM_ERROR();
-            library_handle = nullptr;
+            library_handle_ = nullptr;
         }
     }
 
     void* DynamicLibrary::GetProcedure(const std::string& name) 
     {
-        return GetProcAddress(library_handle, name.c_str());
+        return GetProcAddress(library_handle_, name.c_str());
     }
 }

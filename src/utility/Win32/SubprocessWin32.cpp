@@ -180,7 +180,7 @@ namespace GreyDawn
     {
         // message must 64 bit alignment otherwise the head will be split
         std::vector<uint8_t> message;
-        DWORD amtRead = 0;
+        DWORD read_bytes = 0;
         BOOL return_code;
         uint64_t message_size = 1;
         uint64_t remain_size = 0;
@@ -188,7 +188,7 @@ namespace GreyDawn
         {
             std::array<uint8_t, 4096> buffer;
             memset(&buffer[0],0xFF,4096);
-            return_code = ReadFile(read_pipe_, &buffer, 4096, &amtRead, NULL);
+            return_code = ReadFile(read_pipe_, &buffer, 4096, &read_bytes, NULL);
             if (return_code == 0)
             {
                 if(child_ != INVALID_HANDLE_VALUE)
@@ -202,13 +202,13 @@ namespace GreyDawn
                 if (message_size == 0)
                     break;
                 remain_size = message_size;
-                message.insert(message.end(), buffer.begin() + sizeof(uint64_t), buffer.begin() + amtRead - sizeof(uint64_t));
-                remain_size -= amtRead;
+                message.insert(message.end(), buffer.begin() + sizeof(uint64_t), buffer.begin() + read_bytes - sizeof(uint64_t));
+                remain_size -= read_bytes;
             }
             else
             {
-                message.insert(message.end(), buffer.begin(), buffer.begin() + amtRead);
-                remain_size -= amtRead;
+                message.insert(message.end(), buffer.begin(), buffer.begin() + read_bytes);
+                remain_size -= read_bytes;
             }
             if (remain_size = 0)
             {  
@@ -226,9 +226,9 @@ namespace GreyDawn
         else
         {
             std::lock_guard<std::mutex> lock(write_pipe_mutex_);
-            uint64_t signal = 0;
+            uint64_t token = 0;
             DWORD byte_written;
-            (void)WriteFile(write_pipe_, &signal, sizeof(uint64_t), &byte_written, NULL);
+            (void)WriteFile(write_pipe_, &token, sizeof(uint64_t), &byte_written, NULL);
         }
     }
 
@@ -236,9 +236,9 @@ namespace GreyDawn
         if (worker_.joinable()) {
             {
                 std::lock_guard<std::mutex> lock(write_pipe_mutex_);
-                uint64_t signal = 0;
+                uint64_t token = 0;
                 DWORD byte_written;
-                (void)WriteFile(write_pipe_, &signal, sizeof(uint64_t), &byte_written, NULL);
+                (void)WriteFile(write_pipe_, &token, sizeof(uint64_t), &byte_written, NULL);
             }
             worker_.join();
             (void)CloseHandle(child_);

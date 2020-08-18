@@ -48,7 +48,7 @@ namespace GreyDawn
      */
     void* GetProcedure(const std::string& name);
 #ifdef _WIN32
-    HMODULE library_handle = nullptr;
+    HMODULE library_handle_ = nullptr;
 #elif __linux__
     void* library_handle = nullptr;
 #else
