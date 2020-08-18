@@ -111,10 +111,8 @@ namespace GreyDawn
             std::array<uint8_t, 4096> buffer;
             memset(&buffer[0],0xFF,4096);
             amtRead = read(read_pipe_, &buffer, 4096);
-            GD_LOG_ERROR("{:d}",amtRead);
             if (amtRead == 0 || (amtRead < 0 && (errno != EINTR)))
             {
-                GD_LOG_OUTPUT_SYSTEM_ERROR();
                 if(child_ != -1)
                     child_crashed_();
                 break;
@@ -153,8 +151,6 @@ namespace GreyDawn
             uint64_t signal = 0;
             ssize_t byte_written = 0;
             byte_written = write(write_pipe_, &signal, sizeof(uint64_t));
-            GD_LOG_ERROR("{:d}",byte_written);
-            GD_LOG_OUTPUT_SYSTEM_ERROR();
         }
         std::this_thread::sleep_for(std::chrono::seconds(1));
         //(void)signal(SIGINT, previous_signal_handler_);
@@ -178,7 +174,7 @@ namespace GreyDawn
         childArgs.emplace_back(VectorFromVector(program));
         childArgs.emplace_back(VectorFromVector("child"));
         childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",read_pipe[0])));
-        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",write_pipe[0])));
+        childArgs.emplace_back(VectorFromVector(fmt::format("{:d}",write_pipe[1])));
         for (const auto arg: args) {
             childArgs.emplace_back(arg.begin(),arg.end());
         }
