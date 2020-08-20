@@ -1,21 +1,21 @@
 ﻿#pragma once 
 #include <asio.hpp>
 #include "utility/Logger.h"
-
+#include "Session.h"
 
 namespace GreyDawn
 {
 namespace Net
 {
-	template<typename Session>
 	class Listener
 	{
 	public:
 		Listener::Listener(asio::io_service& io_service, asio::ip::tcp::endpoint endpoint, std::string name = "Listener")
-			:io_service_(io_service)
+			: io_service_(io_service)
 			, acceptor_(io_service, endpoint)
 			, name_(name)
 		{
+			DoAccept();
 		}
 		Listener::~Listener()
 		{
@@ -29,7 +29,7 @@ namespace Net
 		void DoAccept()
 		{
 			acceptor_.async_accept(
-				[this](const std::error_code& ec, asio::ip::tcp::socket socket)
+			[this](const std::error_code& ec, asio::ip::tcp::socket socket)
 			{
 				if (ec)
 				{
