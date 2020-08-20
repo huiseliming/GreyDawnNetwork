@@ -8,12 +8,6 @@ namespace GreyDawn
 {
 namespace Net
 {
-    inline std::function<void(std::vector<uint8_t>)> default_package_handle = [](std::vector<uint8_t> package)
-    {
-        package.push_back('\0');
-        GD_LOG_INFO("message {}", (char*)package.data());
-    };
-
     class IPackage
     {
     public:
@@ -48,12 +42,12 @@ namespace Net
     class Session : public std::enable_shared_from_this<Session>, public DefaultPackage 
     {
     public:
-        Session::Session(asio::io_service& io_service, asio::ip::tcp::socket socket)
+        Session::Session(asio::io_service& io_service, asio::ip::tcp::socket socket, std::function<void(Session&, std::vector<uint8_t>)> package_handle)
             : io_service_(io_service)
             , strand_(io_service)
             , heartbeat_delay_timer_(io_service)
             , socket_(std::move(socket))
-            , package_handle_(default_package_handle)
+            , package_handle_(package_handle)
         {
         }
         virtual Session::~Session()
@@ -131,7 +125,7 @@ namespace Net
                 package_.insert(package_.end(), read_buffer_.begin(), read_buffer_.begin() + length);
                 remain_body_length_ -= length;
                 if (remain_body_length_ == 0) {
-                    package_handle_(std::move(package_));
+                    package_handle_(*this, std::move(package_));
                     DoReadHeader();
                 } else {
                     DoReadBody();
@@ -161,6 +155,7 @@ namespace Net
         }
 
     public:
+        static std::function<void(Session&, std::vector<uint8_t>)> default_package_handle;
         constexpr static size_t kReadBufferSize = 4096;
         constexpr static size_t kWriteBufferSize = 4096;
     protected:
@@ -171,7 +166,7 @@ namespace Net
         std::string ip_;
         uint32_t port_;
 
-        std::function<void(std::vector<uint8_t>)> package_handle_;
+        std::function<void(Session&, std::vector<uint8_t>)> package_handle_;
 
         asio::steady_timer heartbeat_delay_timer_;
         std::deque<std::vector<uint8_t>> package_deque_;
