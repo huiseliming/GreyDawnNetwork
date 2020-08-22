@@ -1,9 +1,4 @@
 {
     "C_Cpp.default.configurationProvider": "ms-vscode.cmake-tools",
-    "files.associations": {
-        "bitset": "cpp",
-        "chrono": "cpp",
-        "algorithm": "cpp",
-        "*.tcc": "cpp"
-    },
+    "C_Cpp.autoAddFileAssociations": false
 }
